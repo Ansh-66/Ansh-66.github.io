@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { hydrateRoot, createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import App from './App.jsx';
 import '@fontsource/young-serif/latin-400.css';
 import '@fontsource/ibm-plex-sans/latin-400.css';
@@ -14,7 +14,7 @@ import './styles.css';
 const root = document.getElementById('root');
 const app = (
   <StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <App />
     </BrowserRouter>
   </StrictMode>

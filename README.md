@@ -2,7 +2,7 @@
 
 My portfolio: a lab notebook of the AI systems I've built, each entry with its measured results and what still fails.
 
-Built with React and Vite. Each page is prerendered to its own HTML file, so every link works on GitHub Pages and the content is there before JavaScript loads.
+Built with React 18, React Router 7 and Vite 8. Each page is prerendered to its own HTML file, so every link works on GitHub Pages and the content is there before JavaScript loads.
 
 The site was built with Claude. The content and every number in it are mine, and each number traces back to an eval file in the project's own repo.
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 // True while a page is being drawn inside the turning page layer. Components
 // render their finished state there and skip observers and timers.

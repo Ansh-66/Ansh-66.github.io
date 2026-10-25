@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { findRoute, normalise } from './routes.jsx';
 import { StaticContext, prefersReducedMotion } from './components/ui.jsx';
 

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Footer, Pen, Row, TopBar } from '../components/ui.jsx';
 
 export default function NotFound() {

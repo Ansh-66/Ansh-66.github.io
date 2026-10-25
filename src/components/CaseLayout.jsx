@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Footer, TopBar } from './ui.jsx';
 
 export default function CaseLayout({ no, meta, title, lede, chips, actions, children, prev, next }) {

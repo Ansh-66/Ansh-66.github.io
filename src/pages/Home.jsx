@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import TraceReplay from '../components/TraceReplay.jsx';
 import { ArmBars, GainTable, HitDots } from '../components/figures.jsx';
 import { CopyEmail, CornerIcon, Ext, Fig, Footer, LINKS, Mark, Pen, Row, TopBar } from '../components/ui.jsx';
