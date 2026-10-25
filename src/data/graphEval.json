@@ -1,0 +1,299 @@
+[
+ {
+  "id": "q01",
+  "type": "cross_chunk",
+  "question": "Which life insurer is expected to explore a distribution agreement with the company that increased its stake in Airtel Africa?",
+  "gold": "Bharti Life Insurance",
+  "bridge": "Bharti Airtel",
+  "arms": {
+   "no_context": {
+    "answer": "Bajaj Allianz Life Insurance.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Guessed Bajaj Allianz Life."
+   },
+   "vector": {
+    "answer": "The sources do not say.",
+    "correct": false,
+    "grounded": "N",
+    "comment": "Abstained - never retrieved the Airtel Africa chunk."
+   },
+   "graph": {
+    "answer": "Bharti Life is the insurer that is expected to explore a strategic distribution agreement with Bharti Airtel, the company that raised its stake in Airtel Africa [2][4][5].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Cites the distribution passages; the Airtel Africa hop itself is not cited."
+   }
+  }
+ },
+ {
+  "id": "q02",
+  "type": "cross_chunk",
+  "question": "Which company's Singapore insurance unit is the firm that sold its 23% stakes in Bajaj Life Insurance and Bajaj General Insurance reported to be bidding for?",
+  "gold": "HSBC Holdings (its Singapore insurance unit, HSBC Life Singapore)",
+  "bridge": "Allianz SE",
+  "arms": {
+   "no_context": {
+    "answer": "Aviva’s Singapore insurance unit.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Guessed Aviva's Singapore unit."
+   },
+   "vector": {
+    "answer": "Allianz SE, which sold its 23% stakes in Bajaj Life Insurance and Bajaj General Insurance, has been listed as a bidder for HSBC’s Singapore insurance unit [5]. The sale of the 23% stakes was reported in the earlier coverage of Allianz’s exit from the Bajaj joint ventures [1].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Correct after rewording; with the old wording vector answered wrongly (Income Insurance)."
+   },
+   "graph": {
+    "answer": "Allianz SE, which sold its 23% stakes in Bajaj Life Insurance and Bajaj General Insurance, is reported to be bidding for HSBC Holdings Plc’s Singapore insurance unit【1】【2】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Reports a bid, not a done deal."
+   }
+  }
+ },
+ {
+  "id": "q03",
+  "type": "cross_chunk",
+  "question": "Which state-owned bank is a promoter of the life insurer in which Jammu & Kashmir Bank holds a stake?",
+  "gold": "Punjab National Bank (30% stake)",
+  "bridge": "PNB MetLife India Insurance",
+  "arms": {
+   "no_context": {
+    "answer": "State Bank of India (SBI).",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Said SBI."
+   },
+   "vector": {
+    "answer": "The promoter that is a state‑owned bank is Punjab National Bank (PNB), which holds a 30 % stake in PNB MetLife India Insurance Co Ltd., alongside Jammu & Kashmir Bank as another shareholder【3】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "One chunk held both facts - this question was effectively single-chunk."
+   },
+   "graph": {
+    "answer": "Punjab National Bank (PNB) is the state‑owned bank that acts as a promoter of PNB MetLife India Insurance Co Ltd, the life insurer in which Jammu & Kashmir Bank also holds a stake【2】. The passage also notes that Jammu & Kashmir Bank is among the notable shareholders of the company【1】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   }
+  }
+ },
+ {
+  "id": "q04",
+  "type": "same_chunk",
+  "question": "Which wealth-tech startup is the acquirer of GreenLife Insurance Broking set to take over?",
+  "gold": "Infinyte Club",
+  "bridge": "Raise Financial Services",
+  "arms": {
+   "no_context": {
+    "answer": "I don't know.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Said \"I don't know\"."
+   },
+   "vector": {
+    "answer": "The acquirer is Raise Financial Services, the wealth‑tech startup that owns the Dhan stock‑broking platform and is buying GreenLife Insurance Broking. 【1】【4】",
+    "correct": false,
+    "grounded": "N",
+    "comment": "Named Raise Financial (the acquirer) instead of Infinyte Club."
+   },
+   "graph": {
+    "answer": "Raise Financial Services, the acquirer of GreenLife Insurance Broking, is set to take over the wealth‑tech startup Infinyte Club【8】【13】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   }
+  }
+ },
+ {
+  "id": "q05",
+  "type": "cross_chunk",
+  "question": "Which life insurer uses the branch network of SBI Capital Markets' parent company for distribution?",
+  "gold": "SBI Life Insurance",
+  "bridge": "State Bank of India",
+  "arms": {
+   "no_context": {
+    "answer": "SBI Life Insurance.",
+    "correct": true,
+    "grounded": "NA",
+    "comment": "Contamination: model already knew this."
+   },
+   "vector": {
+    "answer": "SBI Life Insurance (SBILIFE) distributes its policies through the 22,000‑plus branch network of its parent, State Bank of India, which also houses SBI Capital Markets【1】. This bancassurance model gives it a scale advantage in reaching Indian customers.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Extra claim that SBI \"houses SBI Capital Markets\" is not in the cited passage."
+   },
+   "graph": {
+    "answer": "SBI Life uses the State Bank of India’s 22,000‑plus branch network for distribution【2】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   }
+  }
+ },
+ {
+  "id": "q06",
+  "type": "same_chunk",
+  "question": "Which bank holds a stake in the life insurer that Prudential part-owns?",
+  "gold": "ICICI Bank (50.89% of ICICI Prudential Life Insurance)",
+  "bridge": "ICICI Prudential Life Insurance",
+  "arms": {
+   "no_context": {
+    "answer": "ICICI Bank.",
+    "correct": true,
+    "grounded": "NA",
+    "comment": "Contamination: model already knew this."
+   },
+   "vector": {
+    "answer": "ICICI Bank holds a majority stake in ICICI Prudential Life Insurance, the life insurer in which Prudential currently owns about 22% [2].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   },
+   "graph": {
+    "answer": "ICICI Bank holds a 50.89 % stake in ICICI Prudential Life Insurance, the life insurer in which Prudential retains a minority shareholding【25】【43】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   }
+  }
+ },
+ {
+  "id": "q07",
+  "type": "same_chunk",
+  "question": "Through which entity did Bharti Enterprises hold its stake in the life insurer that Prudential is buying?",
+  "gold": "Bharti Life Ventures (85%)",
+  "bridge": "Bharti Life Insurance",
+  "arms": {
+   "no_context": {
+    "answer": "Bharti Enterprises held its stake through its holding company, **Bharti Enterprises Ltd.**",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Named Bharti Enterprises itself."
+   },
+   "vector": {
+    "answer": "Bharti Enterprises held its interest in the insurer through its subsidiary Bharti Life Ventures Pvt Ltd, which is listed as the seller of the stake to Prudential [1][2].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   },
+   "graph": {
+    "answer": "Bharti Enterprises held its 85 % stake in Bharti Life Insurance through its subsidiary Bharti Life Ventures (Bharti Life Ventures Pvt Ltd)【13】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   }
+  }
+ },
+ {
+  "id": "q08",
+  "type": "single_hop",
+  "question": "What stake has Prudential agreed to acquire in Bharti Life Insurance?",
+  "gold": "75%",
+  "bridge": null,
+  "arms": {
+   "no_context": {
+    "answer": "Prudential has agreed to acquire a **49% stake** in Bharti Life Insurance.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Said 49%."
+   },
+   "vector": {
+    "answer": "Prudential plc has agreed to acquire a 75 percent stake in Bharti Life Insurance Company Limited [1][2].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Says \"agreed to acquire\" - pending status kept."
+   },
+   "graph": {
+    "answer": "Prudential plc has agreed to acquire a 75 % stake in Bharti Life Insurance Company Limited 【3】【4】. This represents a controlling interest in the life‑insurance business.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Says \"agreed to acquire\" - pending status kept."
+   }
+  }
+ },
+ {
+  "id": "q09",
+  "type": "single_hop",
+  "question": "Which company sold its remaining 26% stake in Aviva's Indian life insurance venture?",
+  "gold": "Dabur Invest Corp",
+  "bridge": null,
+  "arms": {
+   "no_context": {
+    "answer": "Reliance Capital.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Said Reliance Capital."
+   },
+   "vector": {
+    "answer": "The 26 % stake is being sold by Dabur Invest Corp, Aviva’s joint‑venture partner in the Indian life‑insurance business【1†L1-L2】【7†L1-L3】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": ""
+   },
+   "graph": {
+    "answer": "Dabur Invest Corp (DIC) is the company whose remaining 26 % stake in Aviva’s Indian life‑insurance venture is being sold to Aviva【5†L1-L2】【6†L1-L2】.",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Rerun after seed fix: seeds now aviva only (LIC was a spurious seed from the words 'life insurance'). Same answer, cleaner context; [5] and [6] both support it."
+   }
+  }
+ },
+ {
+  "id": "q10",
+  "type": "extraction_gap",
+  "question": "Which company increased its stake in Liberty General Insurance to 74%?",
+  "gold": "Liberty Mutual",
+  "bridge": null,
+  "arms": {
+   "no_context": {
+    "answer": "Liberty Mutual.",
+    "correct": true,
+    "grounded": "NA",
+    "comment": "Guessable from the company name."
+   },
+   "vector": {
+    "answer": "Liberty Mutual Insurance – the US‑based insurer – raised its shareholding in Liberty General Insurance to 74 percent [1].",
+    "correct": true,
+    "grounded": "Y",
+    "comment": "Vector indexed the article that failed extraction."
+   },
+   "graph": {
+    "answer": "No company in the question was found in the graph.",
+    "correct": false,
+    "grounded": "N",
+    "comment": "Rerun after seed fix: Liberty General Insurance is not in the graph (extraction failed), so no seed. The old run seeded GIC by matching the words 'general insurance' inside Liberty's name."
+   }
+  }
+ },
+ {
+  "id": "q11",
+  "type": "unanswerable",
+  "question": "Which company acquired Star Health and Allied Insurance?",
+  "gold": "No acquisition is reported. Star Health was only named in unconfirmed market speculation about LIC's health insurance plans, which LIC later shelved.",
+  "bridge": null,
+  "arms": {
+   "no_context": {
+    "answer": "Star Health and Allied Insurance was taken over in 2022 by a private‑equity consortium led by **Bain Capital** and **Warburg Pincus**.",
+    "correct": false,
+    "grounded": "NA",
+    "comment": "Invented a 2022 Bain Capital / Warburg Pincus takeover."
+   },
+   "vector": {
+    "answer": "The sources do not say.",
+    "correct": true,
+    "grounded": "NA",
+    "comment": "Correctly refused to claim an acquisition."
+   },
+   "graph": {
+    "answer": "No company in the question was found in the graph.",
+    "correct": true,
+    "grounded": "NA",
+    "comment": "No seed found; made no claim."
+   }
+  }
+ }
+]

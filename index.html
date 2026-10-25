@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!--head-->
+    <meta name="author" content="Ansh Kumar Singh" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ansh Kumar Singh" />
+    <meta name="theme-color" content="#F3F6EE" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0D110F" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+        } catch (e) {}
+        try { history.scrollRestoration = 'manual'; } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"><!--app--></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
