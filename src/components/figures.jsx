@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useReveal } from './ui.jsx';
+import { useArrive } from './ui.jsx';
 
 /* ---- GoodFoods: where the +2 came from ---- */
 export const gainRows = [
@@ -81,6 +81,21 @@ export function GainTable({ full }) {
   );
 }
 
+/** The same four cases, one line each, for the notebook's summary page. */
+export function GainMini() {
+  return (
+    <ul className="gainmini">
+      {gainRows.map((r) => (
+        <li key={r.name}>
+          <span><span className={`tag ${r.kind}`}>{r.tag}</span></span>
+          <span>{r.name}</span>
+          <span className="chg">{r.chg}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /* ---- Graph RAG: three arms ---- */
 const ARMS = {
   overall: { label: 'All 11 questions', of: 11, v: { graph: 10, vector: 9, none: 3 } },
@@ -90,7 +105,7 @@ const ARMS = {
 export function ArmBars() {
   const [k, setK] = useState('cross');
   const ref = useRef(null);
-  const waiting = useReveal(ref);
+  const waiting = useArrive();
   const d = ARMS[k];
   const rows = [
     ['graph', 'Graph RAG'],
