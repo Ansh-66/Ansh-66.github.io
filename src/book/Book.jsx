@@ -7,6 +7,21 @@ export const SINGLE_MQ = '(max-width: 899px), (max-aspect-ratio: 11/10), (max-he
 const isSingle = () => typeof window !== 'undefined' && window.matchMedia(SINGLE_MQ).matches;
 const canAnimate = () => !prefersReducedMotion() && typeof Element !== 'undefined' && 'animate' in Element.prototype;
 const parity = (i) => ((i % 2) + 2) % 2;
+const mean = (a) => a.reduce((s, x) => s + x, 0) / (a.length || 1);
+
+/** Whether something between el and the book can still scroll further in this direction. */
+function scrollsFurther(el, dir, sideways, stop) {
+  for (; el && el !== stop && el.nodeType === 1; el = el.parentElement) {
+    const cs = getComputedStyle(el);
+    const ov = sideways ? cs.overflowX : cs.overflowY;
+    if (ov !== 'auto' && ov !== 'scroll') continue;
+    const max = sideways ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+    if (max < 2) continue;
+    const at = sideways ? el.scrollLeft : el.scrollTop;
+    if (dir > 0 ? at < max - 1 : at > 1) return true;
+  }
+  return false;
+}
 
 export const BookContext = createContext({ go: () => {}, active: true });
 export const useBook = () => useContext(BookContext);
@@ -41,6 +56,9 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
   const anim = useRef(null);
   // Set the moment a turn starts and cleared once its leaf is gone, so a second request in the same frame sees it.
   const busy = useRef(false);
+  // When the last turn ended, and the wheel gesture under way: a trackpad swipe or a run of wheel clicks.
+  const lastTurnEnd = useRef(0);
+  const gesture = useRef({ last: 0, start: 0, total: 0, used: false, speeds: [] });
   const N = pages.length;
   const nSpreads = Math.ceil(N / 2);
 
@@ -95,7 +113,10 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       if (!single && to >= 0 && to < N) to -= to % 2;
       if (to === from || (from === -1 && to === N) || (from === N && to === -1)) return;
       setTocOpen(false);
-      if (!canAnimate()) return land(to);
+      if (!canAnimate()) {
+        lastTurnEnd.current = performance.now();
+        return land(to);
+      }
       const kind = single ? 'single' : from === -1 || to === -1 ? 'cover' : from === N || to === N ? 'back-cover' : 'spread';
       busy.current = true;
       setFlip({ kind, dir: to > from ? 1 : -1, from, to });
@@ -205,6 +226,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
     const r1 = requestAnimationFrame(() => {
       r2 = requestAnimationFrame(() => {
         busy.current = false;
+        lastTurnEnd.current = performance.now();
         setFlip(null);
         setSettling(false);
       });
@@ -240,13 +262,53 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
         onClose();
       }
     };
+    // The mouse wheel and the trackpad turn pages too, one page per gesture. Events arrive in streams, and a pause of
+    // over 140ms starts a new gesture. A gesture turns at most one page, and only if it began after the last turn
+    // ended, so trackpad momentum never turns a second page and nothing queues during a turn. A clearly harder push in
+    // the middle of a long stream counts as a new gesture, for wheels that never pause.
+    const onWheel = (e) => {
+      if (e.ctrlKey) return; // pinch to zoom
+      if (tocOpen && panel.current?.getClientRects().length) return;
+      const g = gesture.current;
+      const sideways = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      let d = sideways ? e.deltaX : e.deltaY;
+      if (e.deltaMode === 1) d *= 16;
+      else if (e.deltaMode === 2) d *= window.innerHeight;
+      if (!d) return;
+      const now = performance.now();
+      if (now - g.last > 140) Object.assign(g, { start: now, total: 0, used: false, speeds: [] });
+      g.last = now;
+      g.speeds.push(Math.abs(d));
+      if (g.speeds.length > 60) g.speeds.shift();
+      g.total += Math.abs(d);
+      const dir = Math.sign(d);
+      // Whatever scrolls under the pointer (the page's text, the trace, a row of tabs) scrolls first, and a gesture
+      // that scrolled anything never also turns the page.
+      if (scrollsFurther(e.target, dir, sideways, bookEl.current)) {
+        g.used = true;
+        return;
+      }
+      // Ours from here: a sideways swipe must not reach the browser, where it would go back a page.
+      e.preventDefault();
+      if (busy.current) {
+        g.used = true;
+        return;
+      }
+      const fresh = !g.used && g.start >= lastTurnEnd.current && g.total >= 15;
+      const recent = mean(g.speeds.slice(-6));
+      const push = g.speeds.length >= 30 && recent > 12 && recent > mean(g.speeds.slice(-30, -6)) * 1.8 && now - lastTurnEnd.current > 300;
+      if (!fresh && !push) return;
+      g.used = true;
+      g.speeds = [];
+      // A shut front cover opens to the wheel either way.
+      if (shut === 'front') openCover();
+      else (dir > 0 ? next : prev)();
+    };
     window.addEventListener('keydown', onKey);
-    // A shut front cover also opens to the mouse wheel.
-    const wheel = shut === 'front';
-    if (wheel) window.addEventListener('wheel', openCover, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       window.removeEventListener('keydown', onKey);
-      if (wheel) window.removeEventListener('wheel', openCover);
+      window.removeEventListener('wheel', onWheel);
     };
   }, [active, next, prev, onClose, shut, openCover, tocOpen, closeToc]);
 
