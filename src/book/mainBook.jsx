@@ -132,19 +132,35 @@ export const mainPages = [
   {
     head: 'Lab notebook · Ansh Kumar Singh',
     render: () => (
-      <div className="intro">
-        <span className="eyebrow">AI Engineer · Pune, India · open to relocation and remote</span>
-        <h1 id="page-title">Ansh Kumar Singh</h1>
-        <p className="lede">
-          I build LLM systems (agents, RAG, graph retrieval) and test them on labelled question sets, so every result comes with a{' '}
-          <Mark kind="under">number</Mark> and the failures behind it.
-        </p>
-        <div className="actions">
-          <CopyEmail className="btn solid" />
-          <Ext href={LINKS.linkedin} className="btn">LinkedIn</Ext>
-          <Ext href={LINKS.github} className="btn">GitHub</Ext>
-          <a className="btn" href={LINKS.resume} target="_blank" rel="noopener">Resume</a>
+      <div className="intro-page">
+        <div className="intro">
+          <span className="eyebrow">AI Engineer · Pune, India · open to relocation and remote</span>
+          <h1 id="page-title">Ansh Kumar Singh</h1>
+          <p className="lede">
+            I build LLM systems (agents, RAG, graph retrieval) and test them on labelled question sets, so every result comes with a{' '}
+            <Mark kind="under">number</Mark> and the failures behind it.
+          </p>
+          <div className="actions">
+            <CopyEmail className="btn solid" />
+            <Ext href={LINKS.linkedin} className="btn">LinkedIn</Ext>
+            <Ext href={LINKS.github} className="btn">GitHub</Ext>
+            <a className="btn" href={LINKS.resume} target="_blank" rel="noopener">Resume</a>
+          </div>
         </div>
+        {/* At the foot of the first page, like the key in a notebook; the version for the reader's device shows. */}
+        <aside className="howto" aria-label="How to read this notebook">
+          <span className="lbl">How to read this notebook</span>
+          <ul className="by-mouse">
+            <li><b>Turn a page:</b> scroll, swipe with two fingers, press ← →, or click a folded corner.</li>
+            <li><b>Jump to a chapter:</b> pick it from Contents.</li>
+            <li><b>Read a project in full:</b> “Run the full entry” opens its case study; × or Esc brings you back to the same page.</li>
+          </ul>
+          <ul className="by-touch">
+            <li><b>Turn a page:</b> swipe sideways or tap a folded corner.</li>
+            <li><b>Jump to a chapter:</b> open Contents.</li>
+            <li><b>Read a project in full:</b> “Run the full entry”; tap × to come back.</li>
+          </ul>
+        </aside>
       </div>
     ),
   },
