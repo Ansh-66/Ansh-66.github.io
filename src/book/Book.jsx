@@ -40,8 +40,10 @@ export const useBook = () => useContext(BookContext);
 export default function Book({ pages, chapters, spread, onSpread, cover, backCover, shut: shutProp, onShut, variant = 'main', active = true, title, onClose }) {
   const [side, setSide] = useState(0); // single-page mode: 0 = left page of the spread, 1 = right
   const [flip, setFlip] = useState(null);
-  // The turn has landed: the pages underneath already show where it ends, and the leaf goes on the next frame.
-  const [settling, setSettling] = useState(false);
+  // The turn that has landed: the pages underneath already show where it ends, and its leaf goes on the next frame.
+  // It names the turn rather than being true or false, so every landing is a change the settle effect sees, even
+  // when a new turn has started before React applied the last one's clean-up (a key press outranks those updates).
+  const [landed, setLanded] = useState(null);
   const held = !!onShut;
   const [ownShut, setOwnShut] = useState(cover ? 'front' : false);
   const shut = held ? shutProp : ownShut;
@@ -212,7 +214,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       if (done) return;
       done = true;
       land(flip.to);
-      setSettling(true);
+      setLanded(flip);
     };
     k.onfinish = finish;
     k.oncancel = finish;
@@ -221,21 +223,22 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
 
   // One painted frame with the new pages under the finished leaf, then the leaf goes: never a frame with neither.
   useIso(() => {
-    if (!settling) return;
+    if (!landed) return;
     let r2;
     const r1 = requestAnimationFrame(() => {
       r2 = requestAnimationFrame(() => {
         busy.current = false;
         lastTurnEnd.current = performance.now();
-        setFlip(null);
-        setSettling(false);
+        // only this turn's leaf: a turn started in the meantime keeps its own
+        setFlip((f) => (f === landed ? null : f));
+        setLanded(null);
       });
     });
     return () => {
       cancelAnimationFrame(r1);
       cancelAnimationFrame(r2);
     };
-  }, [settling]);
+  }, [landed]);
 
   // Arrow keys, when this book is the one in front.
   useEffect(() => {
@@ -379,7 +382,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
   const put = (i, hidden = false, still = false) => slots[parity(i === 'back' ? N : i)].push({ i, hidden, still });
   // Positions -1 and N are the covers.
   const at = (p) => (p === -1 ? 'front' : p === N ? 'back' : p);
-  const live = flip && !settling ? flip : null;
+  const live = flip && flip !== landed ? flip : null;
   let leafEl = null;
   let baseSide = side;
   const face = (which, i, sideClass) => (
