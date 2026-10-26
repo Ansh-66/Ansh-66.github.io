@@ -736,6 +736,8 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .stack > .console { flex: none; }
   .stack > .console .screen { flex: none; height: 22em; min-height: 0; max-height: none; }
   .requests { flex: none; height: calc(36px + 0.6em); }
+  /* a phone swipes the request chips sideways: no arrows */
+  .req-arrow { display: none; }
   .page-body > .stack:has(> .console) { justify-content: center; }
 
   /* the short pages (intro, skills, certifications) get room to breathe instead of bunching at the top */
