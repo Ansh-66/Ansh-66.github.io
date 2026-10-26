@@ -429,8 +429,10 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       const front = f.kind === 'cover';
       const open = front ? (f.dir > 0 ? f.to : f.from) : f.dir > 0 ? f.from : f.to;
       const opening = front === f.dir > 0;
+      // The leaf is a cover board: it carries its own board edge, so the board travels with it instead of standing bare.
       leafEl = (
-        <div className="leaf leaf-right" ref={leaf}>
+        <div className="leaf leaf-right leaf-cover" ref={leaf}>
+          <div className="leaf-board" />
           {face('front', front ? 'front' : open + 1, 'right')}
           {face('back', front ? open : 'back', 'left')}
         </div>
