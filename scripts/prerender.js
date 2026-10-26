@@ -25,7 +25,9 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g
 // its hash (worked out here, from the built page, so editing that script can't leave the policy stale). Inline style
 // attributes stay allowed: the prerendered bar charts use them, and the site shows no one else's content.
 // frame-ancestors can't be set from a <meta> tag; GitHub Pages sends no headers.
-const inline = [...template.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+// The browser hashes the script after its parser turns CRLF and CR into LF, so the hash must be worked out the same
+// way: a Windows checkout (CRLF) would otherwise get a hash that no browser accepts, and the script would be blocked.
+const inline = [...template.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1].replace(/\r\n?/g, '\n'));
 const hashes = inline.map((s) => `'sha256-${crypto.createHash('sha256').update(s).digest('base64')}'`).join(' ');
 const csp = [
   "default-src 'self'",

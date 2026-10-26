@@ -1,0 +1,7 @@
+# Keep LF everywhere, so the built HTML matches on every platform
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.woff binary
+*.woff2 binary
