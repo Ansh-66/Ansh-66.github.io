@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, startTransition, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { LINKS, Mark, StaticContext, ThemeToggle, prefersReducedMotion, useIso } from '../components/ui.jsx';
 
 // Single-page mode: phones (upright or sideways), and any screen too narrow or tall for a spread.
@@ -121,7 +121,10 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       }
       const kind = single ? 'single' : from === -1 || to === -1 ? 'cover' : from === N || to === N ? 'back-cover' : 'spread';
       busy.current = true;
-      setFlip({ kind, dir: to > from ? 1 : -1, from, to });
+      // Drawing the turning leaf and the pages under it is the heavy part of a turn. As a transition it doesn't hold
+      // up the click or key press that asked for it: the browser answers the input first, React draws in slices.
+      // `busy` is already set, so a second request still finishes this turn rather than starting another.
+      startTransition(() => setFlip({ kind, dir: to > from ? 1 : -1, from, to }));
     },
     [shut, N, spread, side, cover, backCover, land]
   );
