@@ -530,7 +530,7 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .screen { background: var(--console-2); border-radius: 6px; height: 22em; overflow-y: auto; padding: 0.7em 0.8em; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #2f3a34 transparent; }
 .stack > .console { flex: 1 1 auto; display: flex; flex-direction: column; }
 /* fills the page's free height, never grows with the run: a long run scrolls inside the screen */
-.stack > .console .screen { flex: 1 1 0; height: auto; min-height: 20em; max-height: 40em; }
+.stack > .console .screen { flex: 1 1 0; height: auto; min-height: 22em; max-height: 40em; }
 .tl { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 0.6em; padding: 0.15em 0; }
 .tl .who { color: var(--console-dim); font-size: max(14px, 0.86em); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.1em; }
 .tl .what { overflow-wrap: anywhere; white-space: pre-line; }
@@ -693,9 +693,6 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .stack > .console .screen { flex: none; height: 22em; min-height: 0; max-height: none; }
   .requests { flex: none; height: calc(36px + 0.6em); }
   .page-body > .stack:has(> .console) { justify-content: center; }
-  /* too narrow for a column of labels: each label sits above its line, and the line takes the full width */
-  .tl { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0.3em 0; }
-  .tl .who { padding-top: 0; }
 
   /* the short pages (intro, skills, certifications) get room to breathe instead of bunching at the top */
   .intro h1 { margin: 0.6em 0 0.5em; }
