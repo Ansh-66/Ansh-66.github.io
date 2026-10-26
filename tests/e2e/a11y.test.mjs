@@ -66,7 +66,7 @@ test('axe: every spread of every book, light and dark, desktop and phone', { ski
   }
   const line = (v) => `${v.id} [${v.impact}] ${v.help} — e.g. ${v.nodes[0]} — on ${v.where.length} views, first: ${v.where[0]}`;
   if (process.env.A11Y_REPORT) fs.writeFileSync(process.env.A11Y_REPORT, JSON.stringify([...found.values()], null, 1));
-  // best-practice findings are reported, not failed: see QA_REPORT.md for the ones left open on purpose
+  // best-practice findings are reported, not failed: some are left open on purpose
   for (const v of found.values()) if (!v.wcag) console.log(`# axe best practice (not a WCAG failure): ${line(v)}`);
   assert.deepEqual([...found.values()].filter((v) => v.wcag).map(line), [], 'axe WCAG violations');
 });

@@ -42,4 +42,4 @@ Environment variables, all optional:
 | `e2e/resilience.test.mjs` | Missing fonts, styles or script; a slow network; going offline; rotating mid-turn with an entry open; memory, DOM nodes and listeners over 200 turns and 30 entry visits |
 | `matrix/run-matrix.mjs` | Not a pass/fail test: measures page-level scrollbars, things spilling out of a page, clipped text, text under 14px, small tap targets and overlaps, and saves a screenshot of every spread |
 
-Firefox and WebKit aren't covered: see `QA_REPORT.md`.
+Firefox and WebKit aren't covered: the tests drive Chromium only.

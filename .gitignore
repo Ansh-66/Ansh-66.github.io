@@ -4,3 +4,9 @@ dist-ssr
 dist-dev
 .DS_Store
 screenshots/
+
+# QA reports from test runs: kept locally, never committed
+QA_REPORT.md
+TEST_MATRIX.md
+FIX_SUMMARY.md
+PRODUCTION_RELEASE_CHECKLIST.md
