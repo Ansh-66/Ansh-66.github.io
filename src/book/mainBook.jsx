@@ -148,7 +148,7 @@ export const mainPages = [
           </div>
         </div>
         {/* At the foot of the first page, like the key in a notebook; the version for the reader's device shows. */}
-        <aside className="howto" aria-label="How to read this notebook">
+        <div className="howto">
           <span className="lbl">How to read this notebook</span>
           <ul className="by-mouse">
             <li><b>Turn a page:</b> scroll, swipe with two fingers, press ← →, or click a folded corner.</li>
@@ -160,7 +160,7 @@ export const mainPages = [
             <li><b>Jump to a chapter:</b> open Contents.</li>
             <li><b>Read a project in full:</b> “Run the full entry”; tap × to come back.</li>
           </ul>
-        </aside>
+        </div>
       </div>
     ),
   },

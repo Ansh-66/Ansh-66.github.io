@@ -38,4 +38,12 @@ for (const p of pages) {
   fs.writeFileSync(out, html);
   console.log('wrote', path.relative(dist, out));
 }
+// robots.txt and the sitemap list the same pages, so they can't drift from the routes.
+const urls = pages.filter((p) => p.path !== '*').map((p) => `${SITE}${p.path}`);
+fs.writeFileSync(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
+fs.writeFileSync(
+  path.join(dist, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc></url>`).join('\n')}\n</urlset>\n`
+);
+console.log('wrote robots.txt, sitemap.xml');
 fs.rmSync(path.resolve('dist-ssr'), { recursive: true, force: true });

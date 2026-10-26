@@ -547,6 +547,10 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .contact .big-mail { font-family: var(--f-display); font-size: 1.55em; line-height: 1.15; margin: 0.2em 0 0.7em; display: block; text-decoration: none; overflow-wrap: normal; }
 /* the address is 16.6em wide and the text column at least 81% of the page */
 .contact .big-mail { font-size: min(1.55em, 4.75cqi); }
+/* A 44px touch target at any size: an invisible layer takes the taps around the address, and the layout doesn't move.
+   More of it above (a label) than below (the buttons, whose own taps it must not take). */
+.contact .big-mail { position: relative; }
+.contact .big-mail::after { content: ''; position: absolute; inset: -17px 0 -10px; }
 .colophon { font-family: var(--f-mono); font-size: 0.72em; color: var(--ink-2); margin-top: 1.6em !important; }
 
 /* ---------- console (trace replay) ---------- */

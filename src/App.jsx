@@ -133,7 +133,8 @@ export default function App() {
           That page isn’t in the notebook. Here’s the first page instead.
         </p>
       )}
-      <main id="main" className={entry ? 'behind' : ''}>
+      {/* Behind an open entry the notebook is inert: Tab can't reach it and screen readers skip it. */}
+      <main id="main" className={entry ? 'behind' : ''} inert={entry ? '' : undefined}>
         <Book
           variant="main"
           title="Ansh Kumar Singh, lab notebook"

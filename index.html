@@ -26,6 +26,10 @@
           try { if (shut === 'front' && matchMedia('(prefers-reduced-motion: reduce)').matches) shut = ''; } catch (e) {}
           if (shut) d.setAttribute('data-cover', shut);
         } catch (e) {}
+        // Only the app can open a shut cover: if its script fails to load, lift the cover so the prerendered pages can be read.
+        window.addEventListener('error', function (e) {
+          if (e.target && e.target.tagName === 'SCRIPT') d.removeAttribute('data-cover');
+        }, true);
       })();
     </script>
   </head>
