@@ -528,10 +528,11 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .req[aria-pressed='true'] { border-color: var(--console-pen); color: #fff; }
 .screen { background: var(--console-2); border-radius: 6px; height: 22em; overflow-y: auto; padding: 0.7em 0.8em; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #2f3a34 transparent; }
 .stack > .console { flex: 1 1 auto; display: flex; flex-direction: column; }
-.stack > .console .screen { flex: 1 1 auto; height: auto; min-height: 22em; max-height: 40em; }
+/* fills the page's free height, never grows with the run: a long run scrolls inside the screen */
+.stack > .console .screen { flex: 1 1 0; height: auto; min-height: 22em; max-height: 40em; }
 .tl { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 0.6em; padding: 0.15em 0; }
 .tl .who { color: var(--console-dim); font-size: 0.86em; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.1em; }
-.tl .what { overflow-wrap: anywhere; }
+.tl .what { overflow-wrap: anywhere; white-space: pre-line; }
 .tl.tool .what, .tl.result .what { color: var(--console-dim); }
 .tl.guest .what { color: #fff; }
 .tl.gate .what { color: var(--console-pen); }
@@ -547,10 +548,10 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .cbtn:disabled { opacity: 0.4; cursor: default; }
 .step { color: var(--console-dim); font-size: 0.9em; min-width: 4em; text-align: center; }
 .console-note { color: var(--console-dim); font-size: 0.85em; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The note stays on one line: the full one is 45 monospace characters at 0.85em (about 38.3ch of the footer),
+/* The note stays on one line: the full one is 38 monospace characters at 0.85em (about 32.3ch of the footer),
    so a narrower footer shows the short one. Re-check this width if TRACE_SOURCE changes length. */
 .note-short { display: none; }
-@container trace-foot (max-width: 39ch) {
+@container trace-foot (max-width: 33ch) {
   .note-long { display: none; }
   .note-short { display: inline; }
 }

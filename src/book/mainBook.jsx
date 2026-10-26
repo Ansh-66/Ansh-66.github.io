@@ -149,7 +149,7 @@ export const mainPages = [
     ),
   },
   {
-    head: 'A live run',
+    head: 'A recorded run',
     render: () => (
       <div className="stack">
         <Pen arrow="↓">This is a real agent loop I built. Pick a request and watch the tools fire.</Pen>
