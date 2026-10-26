@@ -1,5 +1,6 @@
 // Writes one real HTML file per page, so every link works on GitHub Pages
 // without a client-side redirect, and the content is there before JS runs.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -20,9 +21,29 @@ const preloads = want
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+// Content Security Policy: only this site's own files, plus the one inline script in index.html's head, allowed by
+// its hash (worked out here, from the built page, so editing that script can't leave the policy stale). Inline style
+// attributes stay allowed: the prerendered bar charts use them, and the site shows no one else's content.
+// frame-ancestors can't be set from a <meta> tag; GitHub Pages sends no headers.
+const inline = [...template.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+const hashes = inline.map((s) => `'sha256-${crypto.createHash('sha256').update(s).digest('base64')}'`).join(' ');
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' ${hashes}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self'",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join('; ');
+
 for (const p of pages) {
   const url = p.path === '*' ? '/404/' : p.path;
   const head = [
+    `<meta http-equiv="Content-Security-Policy" content="${csp}" />`,
     `<title>${esc(p.title)}</title>`,
     `<meta name="description" content="${esc(p.description)}" />`,
     `<meta property="og:title" content="${esc(p.title)}" />`,
