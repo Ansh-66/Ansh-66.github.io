@@ -161,7 +161,7 @@ main.behind .book-bar { visibility: hidden; }
    corners, beside the corner buttons. */
 .page.left .page-foot { justify-content: flex-start; padding-left: calc(56px + 0.6em); }
 .page.left .page-foot .pno { order: -1; flex: none; width: max(2.4em, calc(var(--ml) - 56px - 0.6em - 1.1em)); }
-.page.right .page-foot { justify-content: flex-end; padding-right: max(7%, 40px); }
+.page.right .page-foot { justify-content: flex-end; padding-right: calc(56px + 0.6em); }
 .page.right .page-foot .foot-label { display: none; }
 .page-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 7% 2% var(--ml); scrollbar-width: thin; scrollbar-color: var(--rule) transparent; overscroll-behavior: contain;
   /* a scroller starts its own touch-action in Chrome: keep sideways swipes for the book's page turns */
@@ -286,7 +286,7 @@ main.behind .book-bar { visibility: hidden; }
 .corner.next { right: -6px; place-items: end end; }
 .corner.prev { left: -6px; place-items: end start; }
 .corner.prev .ear { padding: 16px 16px 0 0; background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%); border-radius: 0 0 0 6px; box-shadow: 2px -2px 6px -3px rgba(0,0,0,0.25); transform-origin: 0 100%; }
-.corner:hover:not(:disabled) .ear, .corner:focus-visible .ear { transform: scale(1.12); color: var(--pen); }
+.corner:hover:not(:disabled) .ear, .corner:focus-visible .ear { color: var(--pen); }
 .corner .tip {
   position: absolute; bottom: calc(100% - 4px); font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.04em; white-space: nowrap;
   background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 4px; pointer-events: none;
