@@ -156,28 +156,22 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
     if (flip.kind === 'spread') [a, b] = forward ? [0, -180] : [0, 180];
     else [a, b] = forward ? [0, -180] : [-180, 0];
     const covers = flip.kind === 'cover' || flip.kind === 'back-cover';
-    const duration = single ? 460 : covers ? (held ? 640 : 520) : 720;
+    const duration = single ? 1100 : covers ? (held ? 640 : 520) : 720;
     const easing = 'cubic-bezier(0.645, 0.045, 0.355, 1)';
     let k, extra;
     if (single) {
-      // One page hinged a few pixels from the screen's left edge: past edge-on it is off screen, so the page lifts and
-      // sweeps left, fading over the last part of the arc it can be seen in and gone by edge-on. A back turn plays the
-      // same frames in reverse.
+      // One page swings a full half-turn on its left edge: it lifts from the right, comes edge-on at the hinge and folds
+      // over off the screen's left. A back turn plays the same frames in reverse.
       const timing = { duration, easing, fill: 'both', direction: forward ? 'normal' : 'reverse' };
-      k = leaf.current.animate(
-        [
-          { offset: 0, transform: 'translateX(0) rotateY(0deg)' },
-          { offset: 0.78, transform: 'translateX(-3%) rotateY(-68deg)' },
-          { offset: 0.95, transform: 'translateX(-4%) rotateY(-90deg)' },
-          { offset: 1, transform: 'translateX(-5%) rotateY(-180deg)' },
-        ],
-        timing
-      );
-      // opacity on the faces, not the leaf: opacity on the leaf would flatten its 3D
-      const faces = [...leaf.current.querySelectorAll('.face')].map((el) =>
-        el.animate([{ opacity: 1 }, { opacity: 1, offset: 0.78 }, { opacity: 0, offset: 0.95 }, { opacity: 0 }], timing)
-      );
-      const shades = [shadeA.current].filter(Boolean).map((el) => el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.95 }, { opacity: 1 }], timing));
+      k = leaf.current.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-180deg)' }], timing);
+      // Each face shows only on its own half of the turn and swaps exactly at edge-on, on the same easing as the
+      // rotation, so nothing shows through the hidden side (Safari). Opacity on the faces, not the leaf: on the leaf
+      // it would flatten its 3D.
+      const [front, back] = [...leaf.current.querySelectorAll('.face')];
+      const swap = (from, to) => [{ opacity: from }, { opacity: from, offset: 0.5 }, { opacity: to, offset: 0.5 }, { opacity: to }];
+      const faces = [front.animate(swap(1, 0), timing), back.animate(swap(0, 1), timing)];
+      // the shade sweeps across the page, darkest as it stands edge-on
+      const shades = [shadeA.current, shadeB.current].filter(Boolean).map((el) => el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.5 }, { opacity: 0 }], timing));
       extra = [...faces, ...shades];
     } else {
       k = leaf.current.animate([{ transform: `rotateY(${a}deg)` }, { transform: `rotateY(${b}deg)` }], { duration, easing, fill: 'forwards' });

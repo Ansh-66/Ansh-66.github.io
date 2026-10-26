@@ -270,7 +270,8 @@ main.behind .book-bar { visibility: hidden; }
 .shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
 .leaf-right .front .shade, .leaf-left .back .shade { background: linear-gradient(90deg, rgba(0,0,0,0.28), rgba(0,0,0,0) 70%); }
 .leaf-left .front .shade, .leaf-right .back .shade { background: linear-gradient(270deg, rgba(0,0,0,0.28), rgba(0,0,0,0) 70%); }
-.leaf-single .shade { background: linear-gradient(90deg, rgba(0,0,0,0.25), rgba(0,0,0,0) 80%); }
+.leaf-single .front .shade { background: linear-gradient(90deg, rgba(0,0,0,0.28), rgba(0,0,0,0.05) 60%, rgba(0,0,0,0)); }
+.leaf-single .back .shade { background: linear-gradient(270deg, rgba(0,0,0,0.28), rgba(0,0,0,0.05) 60%, rgba(0,0,0,0)); }
 
 /* ---------- corner turn buttons ---------- */
 .corner {
@@ -610,8 +611,6 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   }
   /* the small viewport height, so the book (and every em in it) holds still as the address bar shows or hides */
   .desk { height: 100vh; height: 100svh; }
-  /* close enough that the lifting page reads as lifting, not squashing, without the free edge ballooning past the screen */
-  .book { perspective: 1800px; }
   .overlay .book-wrap { width: 100vw; height: 100vh; height: 100svh; }
   .book-bar { display: none; }
   /* sideways: the same single page, centred */
