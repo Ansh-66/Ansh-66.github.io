@@ -520,6 +520,7 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 /* Every line of the console, labels and buttons included, is at least 14px; on bigger pages it keeps these proportions. */
 .console { background: var(--console); color: var(--console-ink); border-radius: 8px; padding: 0.7em; font-family: var(--f-mono); font-size: max(14px, 0.76em); line-height: 1.5; box-shadow: 0 18px 34px -20px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
 .console-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; padding: 0 0.2em 0.6em; }
+.console-play { display: flex; gap: 0.35em; }
 .console-title { font-size: max(14px, 0.9em); letter-spacing: 0.08em; text-transform: uppercase; color: var(--console-dim); display: flex; align-items: center; gap: 0.5em; }
 .console-title .dot { width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--console-pen); box-shadow: 0 0 0 0.22em rgba(255, 125, 107, 0.18); }
 .console-title .dot.idle { background: var(--console-dim); box-shadow: none; }

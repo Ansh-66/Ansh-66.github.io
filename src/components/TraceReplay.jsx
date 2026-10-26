@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { traces, TRACE_SOURCE, TRACE_SOURCE_SHORT } from '../data/traces.js';
 import { prefersReducedMotion, useInView, useIsStatic } from './ui.jsx';
 
+// Pause before each kind of line appears, in ms at normal speed; SLOW stretches them all.
 const DELAY = { guest: 850, agent: 1050, tool: 620, result: 560, gate: 900 };
+const SLOW = 1.5;
 const WHO = { guest: 'guest', agent: 'agent', tool: 'tool', result: 'result', gate: 'gate' };
 
 export default function TraceReplay() {
@@ -15,6 +17,8 @@ export default function TraceReplay() {
   const [playing, setPlaying] = useState(false);
   const started = useRef(isStatic);
   const animate = useRef(false);
+  // Set by Pause, so the first autoplay can't start the replay after the reader has stopped it.
+  const held = useRef(false);
 
   const trace = traces[ti];
   const total = trace.lines.length;
@@ -28,6 +32,7 @@ export default function TraceReplay() {
       return;
     }
     const t = setTimeout(() => {
+      if (held.current) return;
       animate.current = true;
       setPlaying(true);
     }, 700);
@@ -42,7 +47,7 @@ export default function TraceReplay() {
       return;
     }
     const next = trace.lines[shown];
-    const t = setTimeout(() => setShown((s) => s + 1), shown === 0 ? 250 : DELAY[next.who] || 700);
+    const t = setTimeout(() => setShown((s) => s + 1), (shown === 0 ? 250 : DELAY[next.who] || 700) * SLOW);
     return () => clearTimeout(t);
   }, [playing, inView, shown, total, trace]);
 
@@ -53,6 +58,7 @@ export default function TraceReplay() {
   }, [shown, ti, isStatic]);
 
   const pick = (i) => {
+    held.current = false;
     setTi(i);
     animate.current = !prefersReducedMotion();
     if (prefersReducedMotion()) {
@@ -65,9 +71,24 @@ export default function TraceReplay() {
   };
   const replay = () => pick(ti);
   const step = (d) => {
+    held.current = true;
     setPlaying(false);
     animate.current = true;
     setShown((s) => Math.max(0, Math.min(total, s + d)));
+  };
+  // Play carries on from where the run stopped, or starts it again once it has finished.
+  const toggle = () => {
+    if (playing) {
+      held.current = true;
+      setPlaying(false);
+    } else if (shown >= total) replay();
+    else if (prefersReducedMotion()) setShown(total);
+    else {
+      held.current = false;
+      started.current = true;
+      animate.current = true;
+      setPlaying(true);
+    }
   };
 
   return (
@@ -77,9 +98,14 @@ export default function TraceReplay() {
           <span className={`dot${playing ? '' : ' idle'}`} aria-hidden="true" />
           Replay · GoodFoods agent
         </span>
-        <button type="button" className="cbtn" onClick={replay} aria-label="Replay this run from the start">
-          ↺ Replay
-        </button>
+        <span className="console-play">
+          <button type="button" className="cbtn" onClick={toggle} aria-label={playing ? 'Pause the replay' : 'Play the replay'}>
+            {playing ? 'Pause' : 'Play'}
+          </button>
+          <button type="button" className="cbtn" onClick={replay} aria-label="Replay this run from the start">
+            ↺ Replay
+          </button>
+        </span>
       </div>
       <div className="requests" role="group" aria-label="Pick a guest request">
         {traces.map((t, i) => (
