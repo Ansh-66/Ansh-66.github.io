@@ -562,6 +562,12 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .console-title .dot { width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--console-pen); box-shadow: 0 0 0 0.22em rgba(255, 125, 107, 0.18); }
 .console-title .dot.idle { background: var(--console-dim); box-shadow: none; }
 .requests { display: flex; gap: 0.45em; overflow-x: auto; padding: 0 0 0.6em; scrollbar-width: none; }
+/* the request chips scroll sideways between two arrows */
+.requests-nav { flex: none; display: flex; align-items: flex-start; gap: 0.35em; }
+.requests-nav .requests { flex: 1 1 auto; min-width: 0; height: auto; align-items: flex-start; }
+/* a chip wider than the row (phones) wraps onto a second line rather than being cut off */
+.requests-nav .req { max-width: 100%; white-space: normal; text-align: left; }
+.req-arrow { flex: none; }
 .requests::-webkit-scrollbar { display: none; }
 .req { flex: none; font: inherit; font-size: max(14px, 0.95em); color: var(--console-ink); background: var(--console-2); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 0.45em 0.85em; min-height: 36px; cursor: pointer; white-space: nowrap; }
 .req[aria-pressed='true'] { border-color: var(--console-pen); color: #fff; }

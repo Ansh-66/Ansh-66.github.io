@@ -19,9 +19,42 @@ export default function TraceReplay() {
   const animate = useRef(false);
   // Set by Pause, so the first autoplay can't start the replay after the reader has stopped it.
   const held = useRef(false);
+  // The request chips scroll sideways between two arrows; each arrow is on while there's more that way.
+  const row = useRef(null);
+  const [more, setMore] = useState({ before: false, after: true });
 
   const trace = traces[ti];
   const total = trace.lines.length;
+
+  useEffect(() => {
+    const el = row.current;
+    if (isStatic || !el) return;
+    const update = () => {
+      const before = el.scrollLeft > 1;
+      const after = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+      setMore((m) => (m.before === before && m.after === after ? m : { before, after }));
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro?.disconnect();
+    };
+  }, [isStatic]);
+  // A whole chip at a time: › brings the first chip cut off on the right to the left edge, ‹ brings the one cut off
+  // on the left fully into view.
+  const scrollRow = (dir) => {
+    const el = row.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    const chips = [...el.children].map((c) => c.getBoundingClientRect());
+    const cut = dir > 0 ? chips.find((c) => c.right > box.right + 1) : chips.reverse().find((c) => c.left < box.left - 1);
+    if (!cut) return;
+    const by = dir > 0 ? cut.left - box.left : cut.right - box.right;
+    el.scrollBy({ left: by, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  };
 
   // Start once, the first time the console is on screen.
   useEffect(() => {
@@ -107,12 +140,16 @@ export default function TraceReplay() {
           </button>
         </span>
       </div>
-      <div className="requests" role="group" aria-label="Pick a guest request">
-        {traces.map((t, i) => (
-          <button key={t.id} type="button" className="req" aria-pressed={i === ti} onClick={() => pick(i)}>
-            {t.label}
-          </button>
-        ))}
+      <div className="requests-nav">
+        <button type="button" className="cbtn req-arrow" onClick={() => scrollRow(-1)} disabled={!more.before} aria-label="Show earlier requests">‹</button>
+        <div className="requests" ref={row} role="group" aria-label="Pick a guest request">
+          {traces.map((t, i) => (
+            <button key={t.id} type="button" className="req" aria-pressed={i === ti} onClick={() => pick(i)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="cbtn req-arrow" onClick={() => scrollRow(1)} disabled={!more.after} aria-label="Show more requests">›</button>
       </div>
       <div className="screen" ref={screen} tabIndex={0} aria-label="Conversation and tool calls">
         {trace.lines.slice(0, shown).map((l, i) => (
