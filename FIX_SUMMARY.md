@@ -9,7 +9,7 @@ same check that found it. The design, copy and content are unchanged: no fix mov
 |---|---|
 | `5fe63e0` | QA-01: fast page turns could freeze the book |
 | `3170fd8` | QA-02 to QA-07: dialog focus, keyboard scrolling, nested landmark, script failure, robots/sitemap, email tap target |
-| (this commit) | The test suite (`tests/`), `npm test` / `npm run test:matrix`, and these reports |
+| `324d415` | The test suite (`tests/`), `npm test` / `npm run test:matrix`, and these reports |
 
 ## Files changed
 
