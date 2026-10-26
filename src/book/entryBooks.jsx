@@ -137,10 +137,10 @@ const goodfoods = {
       head: 'Result, by journey',
       render: () => (
         <div>
-          <Fig n={2} caption="Every journey in the first full run and the final run. Four changed between them.">
+          <Fig n={2} caption="Every journey in the first full run and the final run. Six changed between them.">
             <RunTiles />
           </Fig>
-          <Pen>Ten passed both times. The interesting ones are the four that moved.</Pen>
+          <Pen>Nine passed both times. The interesting ones are the six that moved.</Pen>
         </div>
       ),
     },
@@ -149,7 +149,7 @@ const goodfoods = {
       render: () => (
         <div>
           <span className="lbl">Reading my own numbers</span>
-          <h3>11/16 became 13/16. <Mark kind="under">Only one</Mark> of those cases is a real improvement.</h3>
+          <h3>11/16 became 13/16. <Mark kind="under">Only two</Mark> of those cases are real improvements.</h3>
           <Fig n={3} caption="Each case that changed between runs, with its cause.">
             <GainTable />
           </Fig>
@@ -161,8 +161,8 @@ const goodfoods = {
       render: () => (
         <div>
           <p>
-            +3 − 1 = +2: one genuine agent fix, two fixes to how the test measured success, and one case that got worse by chance. On 16 journeys, one or two
-            cases is within noise. Argument accuracy went from 8/12 to 9/12 because outlet lookup now takes names, and the model stopped copying the example id R012.
+            +4 − 2 = +2: two genuine agent fixes and two fixes to how the test measured success, against one first-run pass that a stricter check showed
+            was false and one case that got worse for a reason I didn’t trace. On 16 journeys, one or two cases is within noise. Argument accuracy went from 8/12 to 9/12 because outlet lookup now takes names, and the model stopped copying the example id R012.
           </p>
           <Pen>If I said “69% to 81%”, the first follow-up question would break it.</Pen>
           <span className="lbl">Still fails</span>
@@ -252,7 +252,7 @@ const graph = {
               nodes={[
                 ['Collect', '115 articles, Google News RSS'],
                 ['Extract', 'typed relations, checked with Pydantic'],
-                ['Resolve', '222 names into 136 companies'],
+                ['Resolve', '222 names into 136 companies and people'],
                 ['Walk', 'two hops from the named company', true],
               ]}
             />

@@ -243,8 +243,8 @@ export const mainPages = [
           <span className="big num">13/16</span>
           <span className="what">guest journeys pass</span>
         </div>
-        <Pen>+2 over the first run, and only <Mark kind="ring">one</Mark> of those is real.</Pen>
-        <Fig n={1} caption="The four journeys that changed between the first and final run.">
+        <Pen>+2 over the first run; only <Mark kind="ring">two</Mark> are agent fixes.</Pen>
+        <Fig n={1} caption="The six journeys that changed between the first and final run, by cause.">
           <GainMini />
         </Fig>
         <span className="lbl">Decisions</span>
@@ -272,7 +272,7 @@ export const mainPages = [
         <Chips items={['Python', 'Pydantic', 'Groq', 'NumPy']} />
         <QSR
           q="When the facts for an answer sit in different news articles, does walking a knowledge graph find it where similarity search does not?"
-          s="Relation extraction over 110 Indian insurance articles, with deal status and ownership periods; 222 names merged into 136 companies; cited answers."
+          s="Relation extraction over 110 Indian insurance articles, with deal status and ownership periods; 222 names merged into 136 companies and people; cited answers."
           r="Graph RAG 10/11, vector RAG 9/11, the model alone 3/11."
         />
         <span className="lbl">Flow</span>

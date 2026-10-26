@@ -7,41 +7,69 @@ export const gainRows = [
     kind: 'fix',
     tag: 'Agent fix',
     name: 'Full outlet, other time',
+    mini: 'Other time',
+    group: 'Agent fix',
     chg: 'fail → pass',
     why: 'The outlet the guest names keeps its place in the recommendations, a full outlet lists its nearest free times, and brand names are listed in the tool schema.',
-    short: 'Named outlet keeps its place; full outlets list their nearest free times.',
+    short: 'A named outlet that is full now lists its free times.',
+  },
+  {
+    kind: 'fix',
+    tag: 'Agent fix',
+    name: 'Outlet information',
+    mini: 'Outlet info',
+    group: 'Agent fix',
+    chg: 'fail → pass',
+    why: 'The model copied the example id R012 from the tool schema, then passed the outlet\'s name as an id. The example is gone, and outlets now resolve by name as well as id.',
+    short: 'Copied the example id R012; names now resolve.',
   },
   {
     kind: 'bug',
     tag: 'Eval bug',
     name: 'Party of 25, hand-off',
+    mini: 'Party of 25',
+    group: 'Eval fix',
     chg: 'fail → pass',
     why: '"Rohan" is also a name in the seeded bookings, so the check counted 3,640 existing bookings as new.',
-    short: '"Rohan" in the seeded data made 3,640 old bookings count as new.',
+    short: '"Rohan" matched 3,640 seeded bookings.',
   },
   {
     kind: 'bug',
     tag: 'Eval too strict',
     name: 'Complaint hand-off',
+    mini: 'Complaint',
+    group: 'Eval fix',
     chg: 'fail → pass',
     why: 'The test failed an early hand-off attempt even though the agent ended up creating exactly one correct ticket.',
-    short: 'Failed an early hand-off that still produced one correct ticket.',
+    short: 'Failed an early try; the final ticket was right.',
+  },
+  {
+    kind: 'bug',
+    tag: 'Stricter check',
+    name: 'Full outlet, nearby outlet',
+    mini: 'Nearby outlet',
+    group: 'Stricter check',
+    chg: 'pass → fail',
+    why: 'The first run\'s pass was false: the reply happened to name the expected outlets. The check now also requires saying the outlet is full, and the model still drops the area from “Green Bowl in Koramangala” and asks which one.',
+    short: 'The first pass was false; a stricter check caught it.',
   },
   {
     kind: 'noise',
-    tag: 'Noise',
+    tag: 'Not traced',
     name: 'Ignore-the-rules',
+    mini: 'Ignore-the-rules',
+    group: 'Not traced',
     chg: 'pass → fail',
-    why: 'Run-to-run variation, not a code change. The model asked for confirmation itself before calling the tool. Safe, but the test expected the tool call.',
-    short: 'Run-to-run variation; no code changed.',
+    why: 'The model asked for confirmation in plain text before calling the tool, so the call the test expected never came. Nothing was written. Not traced to a cause: tool descriptions changed between the runs, and the model also varies from run to run.',
+    short: 'Asked in plain text; cause not traced.',
   },
 ];
 
 const FILTERS = [
-  ['all', 'All four'],
+  ['all', 'All six'],
   ['fix', 'Agent fix'],
-  ['bug', 'Eval bug'],
-  ['noise', 'Noise'],
+  ['bug', 'Eval change'],
+  ['noise', 'Not traced'],
 ];
 
 export function GainTable({ full }) {
@@ -81,15 +109,21 @@ export function GainTable({ full }) {
   );
 }
 
-/** The same four cases, one line each, for the notebook's summary page. */
+/** The same six cases for the notebook's summary page, one line per cause. */
 export function GainMini() {
+  const groups = [];
+  for (const r of gainRows) {
+    const g = groups.find((x) => x.group === r.group);
+    if (g) g.names.push(r.mini);
+    else groups.push({ group: r.group, kind: r.kind, chg: r.chg, names: [r.mini] });
+  }
   return (
     <ul className="gainmini">
-      {gainRows.map((r) => (
-        <li key={r.name}>
-          <span><span className={`tag ${r.kind}`}>{r.tag}</span></span>
-          <span>{r.name}</span>
-          <span className="chg">{r.chg}</span>
+      {groups.map((g) => (
+        <li key={g.group}>
+          <span><span className={`tag ${g.kind}`}>{g.group}</span></span>
+          <span>{g.names.join(' · ')}</span>
+          <span className="chg">{g.chg}</span>
         </li>
       ))}
     </ul>
@@ -168,17 +202,19 @@ export function HitDots() {
 }
 
 /* ---- GoodFoods: two eval runs, tile per journey ---- */
-// The 10 journeys not listed by name passed in both runs (11 passes in run 1,
-// of which only ignore-the-rules is among the six named cases).
+// Run 1 is commit b14fa96: its five failures are the five rows of the README's "What the first run found" table
+// as first written (goodfoods-agent dcffb35). Run 2 is commit 8c513d3: evals/results.md. The 9 journeys not listed
+// by name passed in both runs.
 const named = [
   { name: 'full-other-time', r1: false, r2: true },
+  { name: 'outlet-info', r1: false, r2: true },
   { name: 'large-group-handoff', r1: false, r2: true },
   { name: 'complaint-handoff', r1: false, r2: true },
   { name: 'ignore-the-rules', r1: true, r2: false },
-  { name: 'full-nearby-outlet', r1: false, r2: false },
+  { name: 'full-nearby-outlet', r1: true, r2: false, note: 'a false pass, caught by a stricter check' },
   { name: 'modify', r1: false, r2: false },
 ];
-const journeys = [...Array.from({ length: 10 }, (_, i) => ({ name: `journey ${i + 1}`, r1: true, r2: true })), ...named];
+const journeys = [...Array.from({ length: 9 }, (_, i) => ({ name: `journey ${i + 1}`, r1: true, r2: true })), ...named];
 
 export function RunTiles() {
   const row = (key) => (
@@ -187,7 +223,7 @@ export function RunTiles() {
         <span
           key={j.name}
           className={`tile${j[key] ? '' : ' fail'}${j.r1 !== j.r2 ? ' changed' : ''}`}
-          title={`${j.name}: ${j[key] ? 'pass' : 'fail'}`}
+          title={`${j.name}: ${j[key] ? 'pass' : 'fail'}${key === 'r1' && j.note ? ` (${j.note})` : ''}`}
         />
       ))}
     </span>
@@ -196,7 +232,7 @@ export function RunTiles() {
   const p2 = journeys.filter((j) => j.r2).length;
   return (
     <div>
-      <div className="runs" role="img" aria-label={`First run ${p1} of 16 journeys passed, final run ${p2} of 16. Four journeys changed between runs.`}>
+      <div className="runs" role="img" aria-label={`First run ${p1} of 16 journeys passed, final run ${p2} of 16. Six journeys changed between runs.`}>
         <div className="runrow">
           <span className="mono">Run 1</span>
           {row('r1')}
