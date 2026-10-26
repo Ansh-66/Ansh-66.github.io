@@ -25,7 +25,7 @@ Test references are `file › test name` in `tests/e2e/`; all 47 tests passed in
 | `/?utm…`, `/index.html#…`, `/work/…/?ref`, `/work/…/index.html` | Same page as the clean URL | 1440×900 | ✅ | routes › query strings… |
 | `/robots.txt`, `/sitemap.xml`, resume PDF | Present, correct, a real PDF | — | ✅ | routes › robots… / the resume… |
 | all 4 + `/nope` | Content Security Policy present before any script; an injected inline script is refused; a full journey causes no violation | 1440×900 | ✅ | routes › the Content Security Policy… |
-| `/#intro` | Trace console ‹ › arrows: every request seen whole, a chip at a time; the last one can be picked | 1440×900, 390×844 | ✅ | navigation › the trace console arrows… |
+| `/#intro` | Trace console ‹ › arrows: every request seen whole, a chip at a time; the last one can be picked. On a phone: no arrows, a swipe on the chips scrolls them without turning the page | 1440×900, 390×844 | ✅ | navigation › the trace console arrows… |
 | `/` | Front cover opens by click, Enter, → and wheel | 1440×900 | ✅ | navigation › the front cover opens… |
 | `/` | Every chapter in order → back cover → "Back to the first page" → ← shuts the cover | 1440×900 | ✅ | navigation › turning forward visits… |
 | `/#<each of 7 chapters>`, `/#end` | Opens the right spread, and again after a reload | 1440×900 | ✅ | navigation › every chapter link… |

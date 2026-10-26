@@ -391,32 +391,49 @@ test('fast key presses never leave a page stuck mid-turn', async () => {
   }
 });
 
-test('the trace console arrows reach every request, one whole chip at a time, on desktop and phone', async () => {
-  for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
-    const page = await open(browser, '/#intro', { ...still, viewport: vp, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) });
-    await settle(page, 300);
-    if (!(await page.locator('.console:visible').count())) {
-      await page.keyboard.press('ArrowRight');
-      await settle(page, 300);
-    }
-    const c = page.locator('.console:visible').first();
-    const [back, more] = [c.locator('.req-arrow').nth(0), c.locator('.req-arrow').nth(1)];
-    assert.equal(await back.isDisabled(), true, 'nothing before the first request');
-    const seen = new Set();
-    const fully = () => c.evaluate((el) => {
-      const r = el.querySelector('.requests').getBoundingClientRect();
-      return [...el.querySelectorAll('.req')].map((q, i) => [i, q.getBoundingClientRect()]).filter(([, b]) => b.left >= r.left - 1 && b.right <= r.right + 1).map(([i]) => i);
-    });
-    for (let i = 0; i < 12 && !(await more.isDisabled()); i++) {
-      (await fully()).forEach((k) => seen.add(k));
-      await more.click();
-      await page.waitForTimeout(100);
-    }
+test('the trace console arrows reach every request a whole chip at a time; phones swipe instead', async () => {
+  const page = await open(browser, '/#intro', still);
+  await settle(page, 300);
+  const c = page.locator('.console:visible').first();
+  const [back, more] = [c.locator('.req-arrow').nth(0), c.locator('.req-arrow').nth(1)];
+  assert.equal(await back.isDisabled(), true, 'nothing before the first request');
+  const seen = new Set();
+  const fully = () => c.evaluate((el) => {
+    const r = el.querySelector('.requests').getBoundingClientRect();
+    return [...el.querySelectorAll('.req')].map((q, i) => [i, q.getBoundingClientRect()]).filter(([, b]) => b.left >= r.left - 1 && b.right <= r.right + 1).map(([i]) => i);
+  });
+  for (let i = 0; i < 12 && !(await more.isDisabled()); i++) {
     (await fully()).forEach((k) => seen.add(k));
-    assert.deepEqual([...seen].sort(), [0, 1, 2, 3, 4, 5], `${vp.width}: every request seen whole`);
-    assert.equal(await back.isDisabled(), false);
-    await c.locator('.req').nth(5).click();
-    assert.equal(await c.locator('.req').nth(5).getAttribute('aria-pressed'), 'true');
-    await done(page);
+    await more.click();
+    await page.waitForTimeout(100);
   }
+  (await fully()).forEach((k) => seen.add(k));
+  assert.deepEqual([...seen].sort(), [0, 1, 2, 3, 4, 5], 'every request seen whole');
+  assert.equal(await back.isDisabled(), false);
+  await c.locator('.req').nth(5).click();
+  assert.equal(await c.locator('.req').nth(5).getAttribute('aria-pressed'), 'true');
+  await done(page);
+
+  // on a phone there are no arrows: a sideways swipe on the chips scrolls them, and doesn't turn the page
+  const phone = await open(browser, '/#intro', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await settle(phone, 300);
+  if (!(await phone.locator('.console:visible').count())) {
+    await phone.keyboard.press('ArrowRight');
+    await settle(phone, 300);
+  }
+  const pc = phone.locator('.console:visible').first();
+  assert.equal(await pc.locator('.req-arrow:visible').count(), 0, 'no arrows on a phone');
+  const row = pc.locator('.requests');
+  const box = await row.boundingBox();
+  const before = await state(phone);
+  const cdp = await phone.context().newCDPSession(phone);
+  const y = box.y + box.height / 2;
+  const [x0, x1] = [box.x + box.width * 0.85, box.x + box.width * 0.15];
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y }] });
+  for (let i = 1; i <= 8; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + ((x1 - x0) * i) / 8, y }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await phone.waitForTimeout(600);
+  assert.ok((await row.evaluate((e) => e.scrollLeft)) > 50, 'the chips scrolled');
+  assert.deepEqual(await state(phone), before, 'the page did not turn');
+  await done(phone);
 });
