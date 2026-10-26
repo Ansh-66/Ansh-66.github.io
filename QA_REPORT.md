@@ -7,7 +7,7 @@
 
 The site was built, served the way GitHub Pages serves it, and driven in a real Chromium: every route, every page of
 the notebook and of the three entry books, at 44 viewports, by mouse, keyboard, wheel and touch, in both themes, with
-reduced motion, offline, with fonts, styles or script missing, and over long sessions. 45 automated tests now cover it.
+reduced motion, offline, with fonts, styles or script missing, and over long sessions. 47 automated tests now cover it.
 
 - **Found and fixed:** 1 P1 (fast page turns could freeze the book), 2 P2 (keyboard focus escaping the entry dialog;
   pages that couldn't be scrolled by keyboard), 4 P3. All re-tested with the check that found them.
@@ -67,8 +67,20 @@ clipboard is refused); the theme toggle (stored in `localStorage`); external lin
 | Deployed site headers | ❌ not done | Not deployed; GitHub Pages controls the headers anyway |
 | Forms, server validation, API load, auth | n/a | The site has none |
 
-**Automated tests: 45 run, 45 pass, 0 fail, 0 skipped** (with `AXE_PATH` set; without axe-core 1 test skips).
+**Automated tests: 47 run, 47 pass, 0 fail, 0 skipped** (with `AXE_PATH` set; without axe-core 1 test skips).
 Before the fixes, 6 of these failed on real defects.
+
+## Follow-up, same day
+
+After the first report, with your decisions:
+
+| Item | Outcome |
+|---|---|
+| QA-11 resume, QA-16 notes | You are fixing these yourself |
+| QA-12 share image | Not wanted for now |
+| QA-13 Content Security Policy | **Fixed.** A `<meta>` policy on every page: scripts only from the site and the one inline head script, by its SHA-256 hash (computed by the prerender, so it can't go stale); styles, images, fonts and connections from the site only (inline style attributes allowed: the prerendered bar charts use them); no objects, frames, forms or `<base>` changes. Tested: an injected inline script is refused, and a full journey (cover, turns, an entry, theme) causes no violation. Framing (`frame-ancestors`) still can't be set: it only works as a header, and GitHub Pages sends none |
+| QA-14 slow corner clicks | **Fixed.** A turn is now drawn as a React transition, so the click or key is answered before React draws the turning page. Slowest corner click (3 sessions of 8): desktop 4× CPU 208–280 ms → 24–40 ms; desktop 1× 104–120 → 24 ms; phone 4× CPU 96–112 → 24–32 ms. The turning page also appears sooner at 4× CPU (median 88 → 36 ms after the click) and 13 ms later at normal speed (14 → 27 ms); frame times during the turn are unchanged. The frozen-turn reproduction still gives 0 of 30 |
+| Trace console navigation (new request) | **Added:** ‹ › arrows either side of the request chips scroll the row a whole chip at a time; each is disabled when there's nothing more that way. On phones, a chip wider than the row wraps onto two lines instead of being cut off (desktop chips are unchanged). This makes the console about 20 px taller on phones: the console page now scrolls inside itself by 1 px at 375×812 (was 0), 54 px at 360×800 (was 34) and 349 px at 320×568 (was 286) |
 
 ## Defects
 
@@ -123,8 +135,8 @@ The guide added on 26 Oct was an `<aside>` inside `<main>` (axe `landmark-comple
 | QA-09 | P3 | Text under the site's own 14 px rule: running heads and footers (~9.5 px on laptops), cause tags (~9 px), the question tabs' small labels (8–10 px), some `dt` labels (~10 px). Not a WCAG failure (no minimum size), but tiny | A visible design change | Raise them with `max(14px, …)` as was done for the console |
 | QA-10 | P3 | Touch targets under the site's 44 px rule (all pass WCAG's 24 px): console buttons and request chips (36 px), cause filters, question tabs, the margin "Resume" link (40–42 px wide) | The console design was explicitly to stay as it is | Raise `min-height` to 44 px |
 | QA-12 | P3 | No social-share image (`og:image`, Twitter card): shared links show no picture | Needs a new image | Add a 1200×630 image of the cover |
-| QA-13 | P3 | No Content Security Policy; the site can be framed by other sites (no `frame-ancestors`/`X-Frame-Options`; GitHub Pages can't send headers) | Hardening; low impact for a static site with no actions or user data | A `<meta>` CSP (`default-src 'self'`, plus a hash for the head script and `'unsafe-inline'` for style attributes) |
-| QA-14 | P3 | INP: a corner click that starts a two-page turn takes 112–128 ms at normal CPU (good) but 216–272 ms at 4× CPU slowdown (needs improvement) — React drawing four pages for the turn | Architectural; the turn engine was just fixed | Defer the turning leaf's content, or accept |
+| QA-13 | P3 | **Policy fixed in the follow-up.** No Content Security Policy; the site can be framed by other sites (no `frame-ancestors`/`X-Frame-Options`; GitHub Pages can't send headers) | Hardening; low impact for a static site with no actions or user data | A `<meta>` CSP (`default-src 'self'`, plus a hash for the head script and `'unsafe-inline'` for style attributes) |
+| QA-14 | P3 | **Fixed in the follow-up.** INP: a corner click that starts a two-page turn takes 112–128 ms at normal CPU (good) but 216–272 ms at 4× CPU slowdown (needs improvement) — React drawing four pages for the turn | Architectural; the turn engine was just fixed | Defer the turning leaf's content, or accept |
 | QA-16 | P3 | `CLAUDE.md` lists the chapters in the old order and lacks Entry 4; `README.md` describes the footer from before the phone footer change | Your instructions file | Update the docs |
 | QA-17 | P3 | The deploy workflow pins actions to tags (`@v4`), not commit SHAs | Supply-chain hardening | Pin to SHAs |
 
@@ -177,7 +189,7 @@ faces above the fold; no layout shift as fonts load (CLS 0).
 - The resume PDF: no JavaScript, no author metadata, no phone number, no client names.
 - `npm audit`: 0 vulnerabilities. Dependencies: 7 runtime, 3 dev.
 - The one `http://localhost` string in the bundle is React Router's internal base URL for parsing, not a link.
-- Open: QA-13 (no CSP, frameable), QA-17 (actions pinned to tags). Runtime headers of the deployed site not checked.
+- Content Security Policy on every page (follow-up). Still open: the site can be framed (needs a header), QA-17 (actions pinned to tags). Runtime headers of the deployed site not checked.
 
 ## SEO and metadata
 

@@ -107,3 +107,48 @@ test('query strings and index.html addresses resolve to the same page', async ()
   }
   for (const e of ENTRIES) assert.equal((await get(`/work/${e}/`)).status, 200);
 });
+
+test('the Content Security Policy is in force and nothing the site does breaks it', async () => {
+  for (const r of [...ROUTES, '/nope']) {
+    const html = await (await get(r)).text();
+    assert.match(html, /<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-[A-Za-z0-9+/=]+'/, r);
+    assert.ok(html.indexOf('Content-Security-Policy') < html.indexOf('<script'), `${r}: the policy comes before any script`);
+  }
+  const page = await open(browser, null);
+  await page.addInitScript(() => {
+    window.__csp = [];
+    document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
+  await page.goto(BASE + '/');
+  await page.waitForTimeout(400);
+  // the head script ran (it is allowed by its hash): it shut the cover before the app loaded
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('js')), true);
+  await page.keyboard.press('ArrowRight');
+  for (let i = 0; i < 3; i++) {
+    await settle(page, 100);
+    await page.keyboard.press('ArrowRight');
+  }
+  await settle(page, 100);
+  await page.locator('main .book a.run').first().click();
+  await page.waitForFunction(() => !!document.querySelector('.overlay'));
+  await settle(page, 900);
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press('ArrowRight');
+    await settle(page, 100);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.overlay'));
+  await page.locator('.book-theme button').first().click();
+  // an injected inline script is refused
+  const ran = await page.evaluate(() => {
+    window.__injected = false;
+    const s = document.createElement('script');
+    s.textContent = 'window.__injected = true';
+    document.head.appendChild(s);
+    return window.__injected;
+  });
+  assert.equal(ran, false, 'inline script blocked');
+  const violations = await page.evaluate(() => window.__csp.filter((v) => !/^script-src(-elem)? inline$/.test(v)));
+  assert.deepEqual(violations, [], 'no violations from the site itself');
+  await page.context().close();
+});

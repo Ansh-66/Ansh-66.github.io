@@ -23,6 +23,8 @@ after(async () => {
 });
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
+// axe is injected as an inline script, which the site's Content Security Policy rightly refuses; the scan's
+// contexts bypass the policy (only the scanner needs it), the other tests here keep it on.
 async function axe(page) {
   if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ content: axeSource });
   const r = await page.evaluate(async (tags) => {
@@ -42,7 +44,7 @@ test('axe: every spread of every book, light and dark, desktop and phone', { ski
     }
   };
   for (const [scheme, vp] of [['light', { width: 1440, height: 900 }], ['dark', { width: 1440, height: 900 }], ['light', { width: 390, height: 844 }]]) {
-    const opts = { reducedMotion: 'reduce', colorScheme: scheme, viewport: vp, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) };
+    const opts = { reducedMotion: 'reduce', colorScheme: scheme, viewport: vp, bypassCSP: true, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) };
     // the shut cover, as a first visit sees it
     const cover = await open(browser, '/', { ...opts, reducedMotion: 'no-preference' });
     await cover.waitForTimeout(600);

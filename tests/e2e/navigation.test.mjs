@@ -390,3 +390,33 @@ test('fast key presses never leave a page stuck mid-turn', async () => {
     await done(page);
   }
 });
+
+test('the trace console arrows reach every request, one whole chip at a time, on desktop and phone', async () => {
+  for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const page = await open(browser, '/#intro', { ...still, viewport: vp, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) });
+    await settle(page, 300);
+    if (!(await page.locator('.console:visible').count())) {
+      await page.keyboard.press('ArrowRight');
+      await settle(page, 300);
+    }
+    const c = page.locator('.console:visible').first();
+    const [back, more] = [c.locator('.req-arrow').nth(0), c.locator('.req-arrow').nth(1)];
+    assert.equal(await back.isDisabled(), true, 'nothing before the first request');
+    const seen = new Set();
+    const fully = () => c.evaluate((el) => {
+      const r = el.querySelector('.requests').getBoundingClientRect();
+      return [...el.querySelectorAll('.req')].map((q, i) => [i, q.getBoundingClientRect()]).filter(([, b]) => b.left >= r.left - 1 && b.right <= r.right + 1).map(([i]) => i);
+    });
+    for (let i = 0; i < 12 && !(await more.isDisabled()); i++) {
+      (await fully()).forEach((k) => seen.add(k));
+      await more.click();
+      await page.waitForTimeout(100);
+    }
+    (await fully()).forEach((k) => seen.add(k));
+    assert.deepEqual([...seen].sort(), [0, 1, 2, 3, 4, 5], `${vp.width}: every request seen whole`);
+    assert.equal(await back.isDisabled(), false);
+    await c.locator('.req').nth(5).click();
+    assert.equal(await c.locator('.req').nth(5).getAttribute('aria-pressed'), 'true');
+    await done(page);
+  }
+});

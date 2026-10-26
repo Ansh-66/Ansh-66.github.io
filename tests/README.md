@@ -10,7 +10,7 @@ Node's own test runner and the `playwright` package already in `devDependencies`
 npm ci
 npx playwright install chromium      # once per machine: the browser the tests drive
 npm run build                        # the tests check the production build in dist/, not the dev server
-npm test                             # 45 tests, about 4 minutes
+npm test                             # 47 tests, about 6 minutes
 ```
 
 Optional:

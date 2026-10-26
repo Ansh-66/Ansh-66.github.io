@@ -8,7 +8,7 @@ Items marked ✅ were verified in the audit on 26 Oct 2026 (`QA_REPORT.md`); ⬜
 - ✅ `npm ci` installs from the lockfile with no errors
 - ✅ `npm run build` succeeds and prints `wrote` for `index.html`, the three `work/…/index.html`, `404.html`, and `robots.txt, sitemap.xml`
 - ✅ `npm audit` reports 0 vulnerabilities
-- ✅ `npm test` passes 45/45 against the build (with axe-core available so the accessibility scans run; see `tests/README.md`)
+- ✅ `npm test` passes 47/47 against the build (with axe-core available so the accessibility scans run; see `tests/README.md`)
 - ✅ `npm run test:matrix` shows no page-level scrollbar, no spilled element and no runtime error at any of the 44 viewports
 - ⬜ Re-run all four after any further change before releasing
 
@@ -54,7 +54,7 @@ Items marked ✅ were verified in the audit on 26 Oct 2026 (`QA_REPORT.md`); ⬜
 - ✅ Every external link opens in a new tab with `rel="noopener noreferrer"`
 - ✅ No source maps published
 - ⬜ GitHub Pages serves HTTPS: Settings → Pages → **Enforce HTTPS** is ticked
-- ⬜ (Optional, QA-13) add a Content Security Policy `<meta>`; GitHub Pages can't send security headers
+- ✅ A Content Security Policy `<meta>` is on every page (scripts by hash, own origin only); `npm test` checks it. GitHub Pages can't send headers, so `frame-ancestors` (framing) can't be set
 
 ## 7. Rollback
 

@@ -63,3 +63,15 @@ These need a decision from you, because they change the design or the content. E
 - **QA-12** No social-share image (`og:image`).
 - **QA-13** No Content Security Policy (GitHub Pages can't send headers; a `<meta>` CSP is possible).
 - **QA-16/17** Stale notes in `CLAUDE.md` and `README.md`; the deploy workflow's actions are pinned to tags, not commits.
+
+## Follow-up (same day, with your decisions)
+
+| Change | Files | Before → after | Test |
+|---|---|---|---|
+| Content Security Policy (QA-13) | `scripts/prerender.js` | No policy → `<meta>` policy on every page, the inline head script allowed by a hash computed at build time | `routes.test.mjs` › "the Content Security Policy…" |
+| Corner clicks (QA-14) | `src/book/Book.jsx` (`setFlip` inside `startTransition`) | Slowest click at 4× CPU 208–280 ms → 24–40 ms; the turn appears sooner at 4× CPU, 13 ms later at 1× | The whole navigation suite and the frozen-turn regression (0/30) |
+| Trace console arrows (new) | `src/components/TraceReplay.jsx`, `src/styles.css` | Only the first 2–3 requests were visible → ‹ › step through all six, a whole chip at a time; long chips wrap on phones | `navigation.test.mjs` › "the trace console arrows…" |
+| Test helper | `tests/e2e/support.mjs` | `settle()` waits for 10 still frames, since a turn's leaf can now appear a frame or two after the key press | — |
+| axe scan | `tests/e2e/a11y.test.mjs` | The scan's contexts bypass the policy (axe is injected inline); every other test keeps it | — |
+
+`npm test`: 47/47. Quick matrix (10 viewports): all pass.

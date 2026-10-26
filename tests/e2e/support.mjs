@@ -75,9 +75,25 @@ export async function open(browser, url = '/', opts = {}) {
   return page;
 }
 
-/** Waits until no page is turning. */
+/**
+ * Waits until no page is turning. A turn is drawn as a React transition, so its leaf can appear a frame or two after
+ * the key press: the book counts as still only once no leaf has been seen for 10 frames in a row.
+ */
 export async function settle(page, extra = 50) {
-  await page.waitForFunction(() => !document.querySelector('.leaf'), null, { timeout: 5000 });
+  await page.waitForFunction(
+    () =>
+      new Promise((done) => {
+        let quiet = 0;
+        const tick = () => {
+          quiet = document.querySelector('.leaf') ? 0 : quiet + 1;
+          if (quiet >= 10) done(true);
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    null,
+    { timeout: 5000 }
+  );
   await page.waitForTimeout(extra);
 }
 
