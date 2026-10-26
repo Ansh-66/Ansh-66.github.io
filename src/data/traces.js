@@ -3,8 +3,10 @@
 // PLACEHOLDER: these follow the agent's real tool names and behaviour, but the
 // exact wording must be replaced with the logged example conversations from the
 // goodfoods-agent README before the site goes live. Set TRACE_SOURCE to
-// 'Replayed from a logged run · no live model' once they are.
+// 'Replayed from a logged run · no live model' once they are, and TRACE_SOURCE_SHORT
+// (shown where the console is too narrow for the full line) to 'Logged run · no live model'.
 export const TRACE_SOURCE = 'Sample run · to be replaced with a logged one';
+export const TRACE_SOURCE_SHORT = 'Sample run · not yet logged';
 
 export const traces = [
   {

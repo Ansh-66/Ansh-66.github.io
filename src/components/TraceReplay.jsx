@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { traces, TRACE_SOURCE } from '../data/traces.js';
+import { traces, TRACE_SOURCE, TRACE_SOURCE_SHORT } from '../data/traces.js';
 import { prefersReducedMotion, useInView, useIsStatic } from './ui.jsx';
 
 const DELAY = { guest: 850, agent: 1050, tool: 620, result: 560, gate: 900 };
@@ -110,7 +110,10 @@ export default function TraceReplay() {
           </span>
           <button type="button" className="cbtn" onClick={() => step(1)} disabled={shown >= total} aria-label="Next step">▶</button>
         </div>
-        <span className="console-note">{TRACE_SOURCE}</span>
+        <span className="console-note">
+          <span className="note-long">{TRACE_SOURCE}</span>
+          <span className="note-short">{TRACE_SOURCE_SHORT}</span>
+        </span>
       </div>
     </section>
   );

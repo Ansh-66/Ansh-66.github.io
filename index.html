@@ -19,6 +19,13 @@
           if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
         } catch (e) {}
         try { history.scrollRestoration = 'manual'; } catch (e) {}
+        // Every load of "/" starts on the shut front cover, and "/#end" on the back cover; App.jsx makes the same call after hydration.
+        try {
+          var home = location.pathname === '/' || location.pathname === '/index.html';
+          var shut = home && !location.hash ? 'front' : home && location.hash === '#end' ? 'back' : '';
+          try { if (shut === 'front' && matchMedia('(prefers-reduced-motion: reduce)').matches) shut = ''; } catch (e) {}
+          if (shut) d.setAttribute('data-cover', shut);
+        } catch (e) {}
       })();
     </script>
   </head>

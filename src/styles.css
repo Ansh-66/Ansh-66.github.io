@@ -1,5 +1,6 @@
 /* Layout concept: an open, side-bound engineering notebook on a desk. Each
    screen is one spread (two pages); the right-hand corner turns the page.
+   The book fills the screen and the left page's margin holds the contents.
    Full entries open as a second, smaller book on top. Everything inside a
    page is sized in em, so a page reads the same at every size it is drawn. */
 :root {
@@ -24,6 +25,7 @@
   --console-pen: #FF7D6B;
   --good: #2C6E4A;
   --edge: #E2E8DC;
+  --cover-ink: #F2EFE6;
 
   --f-display: 'Young Serif', 'Iowan Old Style', Georgia, serif;
   --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -38,7 +40,7 @@
     --ink: #E2E9E1; --ink-2: #A6B3A9; --rule: #2B352F;
     --pen: #FF806E; --pen-soft: rgba(255, 128, 110, 0.38); --chip: #232C27;
     --cover: #24382C; --cover-2: #162219; --console: #070A09; --console-2: #121815;
-    --good: #7CCB9B; --edge: #222A25;
+    --good: #7CCB9B; --edge: #222A25; --cover-ink: #E8E4DA;
     color-scheme: dark;
   }
 }
@@ -48,7 +50,7 @@
   --ink: #E2E9E1; --ink-2: #A6B3A9; --rule: #2B352F;
   --pen: #FF806E; --pen-soft: rgba(255, 128, 110, 0.38); --chip: #232C27;
   --cover: #24382C; --cover-2: #162219; --console: #070A09; --console-2: #121815;
-  --good: #7CCB9B; --edge: #222A25;
+  --good: #7CCB9B; --edge: #222A25; --cover-ink: #E8E4DA;
   color-scheme: dark;
 }
 
@@ -56,7 +58,7 @@
 html { -webkit-text-size-adjust: 100%; height: 100%; }
 body {
   margin: 0; min-height: 100%; background: var(--desk); color: var(--desk-ink);
-  font-family: var(--f-body); line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  font-family: var(--f-body); line-height: 1.55; -webkit-font-smoothing: antialiased; overflow: hidden;
   background-image: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--desk) 70%, #fff 30%) 0%, var(--desk) 60%, var(--desk-2) 100%);
   background-attachment: fixed;
 }
@@ -64,6 +66,8 @@ img, svg { max-width: 100%; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--pen); }
 button { font: inherit; color: inherit; }
+/* no blue tap box on touch screens; keyboard users keep the pen-coloured ring below */
+html { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--pen); outline-offset: 3px; border-radius: 3px; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
@@ -72,32 +76,25 @@ p { text-wrap: pretty; }
 .mono { font-family: var(--f-mono); }
 
 /* ---------- desk ---------- */
-.desk { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
-.deskbar {
-  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: 4px max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px));
-}
-.brand { font-family: var(--f-display); font-size: 17px; text-decoration: none; }
-.deskbar nav { display: flex; align-items: center; gap: 6px; }
-.navlink { font-size: 14.5px; padding: 10px 12px; min-height: 44px; display: inline-flex; align-items: center; border-radius: 6px; text-decoration: none; }
-.navlink:hover { background: color-mix(in srgb, var(--desk-ink) 7%, transparent); }
+.desk { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
 .iconbtn { width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--desk-ink) 18%, transparent); background: transparent; cursor: pointer; }
 .iconbtn:hover { background: color-mix(in srgb, var(--desk-ink) 7%, transparent); }
 .iconbtn svg { width: 20px; height: 20px; }
-.notice { margin: 0 16px 8px; font-size: 14px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 8px 14px; border-radius: 6px; }
-main { width: 100%; display: flex; justify-content: center; flex: 1; }
+.notice { margin: 10px 16px 0; font-size: 14px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 8px 14px; border-radius: 6px; }
+main { width: 100%; display: flex; flex: 1; min-height: 0; }
 main.behind { pointer-events: none; }
-main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
+main.behind .book-bar { visibility: hidden; }
 
 /* ---------- the book ---------- */
 .book-wrap {
-  --ratio: 1.42;
-  --bw: min(1240px, calc(100vw - 150px), calc((100dvh - 164px) * var(--ratio)));
-  --bh: calc(var(--bw) / var(--ratio));
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 30px; padding-top: 16px;
+  /* the desk showing around the cover boards; the padding adds the boards' own overhang */
+  --gap: 12px;
+  position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  padding: calc(var(--gap) + 14px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + 16px)
+    calc(max(var(--gap), env(safe-area-inset-bottom, 0px)) + 16px) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 16px);
 }
 .book {
-  position: relative; width: var(--bw); height: var(--bh); perspective: 2800px; touch-action: pan-y;
+  position: relative; flex: 1; min-height: 0; width: 100%; perspective: 2800px; touch-action: pan-y;
 }
 /* cover boards, larger than the paper */
 .book::before {
@@ -112,15 +109,24 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
   background: linear-gradient(90deg, var(--edge), var(--paper) 2%, var(--paper) 98%, var(--edge));
   box-shadow: 0 1px 0 var(--rule), 0 3px 0 var(--edge), 0 4px 0 var(--rule), 0 6px 0 var(--edge);
 }
-.book.closed::before, .book.closed::after, .book.opening::after { left: 50%; }
-.book.closed::before { left: calc(50% - 4px); }
+.overlay .book.closed::before, .overlay .book.closed::after, [data-cover='front'] .main .book.closed::before, [data-cover='front'] .main .book.closed::after, .book.turning-front::after { left: 50%; }
+.overlay .book.closed::before, [data-cover='front'] .main .book.closed::before { left: calc(50% - 4px); }
+/* Shut on the back cover, the book is only its left half. An entry book says which cover with .at-back,
+   the main notebook with data-cover on <html> (set before the first paint). */
+.overlay .book.closed.at-back::before { left: -16px; }
+.overlay .book.closed.at-back::after { left: -5px; }
+.overlay .book.closed.at-back::before, .overlay .book.closed.at-back::after, [data-cover='back'] .main .book.closed::before, [data-cover='back'] .main .book.closed::after, .book.turning-back::after { right: 50%; }
+.overlay .book.closed.at-back::before, [data-cover='back'] .main .book.closed::before { right: calc(50% - 4px); }
+/* the main notebook sits centred on the desk while shut; the book slides with the cover as it turns */
+[data-cover='front'] .main .book.closed { transform: translateX(-25%); }
+[data-cover='back'] .main .book.closed { transform: translateX(25%); }
 .pages { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; z-index: 1; }
 .slot { position: relative; min-width: 0; container-type: size; }
 .spine {
   position: absolute; top: -14px; bottom: -16px; left: calc(50% - 9px); width: 18px; z-index: 3; pointer-events: none;
   background: linear-gradient(90deg, rgba(0,0,0,0) 0, rgba(0,0,0,0.22) 45%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0) 100%);
 }
-.book.closed .spine { display: none; }
+.overlay .book.closed .spine, [data-cover] .main .book.closed .spine, [data-cover='front'] .main .book.closed .corner { display: none; }
 
 /* ---------- a page ---------- */
 .page {
@@ -128,24 +134,43 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
   background-color: var(--paper);
   background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 1.6em 1.6em; background-position: -1px -1px;
-  /* scales with the page: whichever of width or height is tighter */
-  font-size: clamp(13px, min(2.72cqi, 1.93cqh), 18px);
+  /* pages take the screen's shape, so text follows the page's height, capped by its width */
+  font-size: clamp(14px, min(2.05cqh, 3.1cqi), 20px);
   display: flex; flex-direction: column;
+  --ml: 12%; /* where text starts */
+  --rule-x: 9%;
 }
+/* the left page of a spread: contents in the outer margin, the red rule just right of it */
+.page.with-margin { --mw: clamp(120px, 15cqi, 190px); --ml: calc(var(--mw) + 2.4cqi); --rule-x: var(--mw); }
 .page.left { border-radius: 6px 0 0 6px; box-shadow: inset -26px 0 30px -26px rgba(0, 0, 0, 0.28); }
 .page.right { border-radius: 0 6px 6px 0; box-shadow: inset 26px 0 30px -26px rgba(0, 0, 0, 0.28); }
 .page.blank { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); }
-.book.opening .slot:first-child .page.blank, .book.closed .slot:first-child .page { visibility: hidden; }
+/* a page waiting under the turning leaf for the turn to land, or the half a turning cover has left bare */
+.page.pre { visibility: hidden; }
+/* the pages under a shut cover stay out of sight and out of the tab order until it opens */
+.overlay .book.closed .pages, [data-cover] .main .book.closed .pages { visibility: hidden; }
 /* the red margin rule */
-.page:not(.cover)::before { content: ''; position: absolute; top: 0; bottom: 0; left: 9%; width: 1.5px; background: var(--pen-soft); pointer-events: none; }
-.page-head, .page-foot { flex: none; display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.68em; letter-spacing: 0.06em; color: var(--ink-2); padding: 0 7% 0 12%; }
+.page:not(.cover)::before { content: ''; position: absolute; top: 0; bottom: 0; left: var(--rule-x); width: 1.5px; background: var(--pen-soft); pointer-events: none; }
+.page-head, .page-foot { flex: none; display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.68em; letter-spacing: 0.06em; color: var(--ink-2); padding: 0 7% 0 var(--ml); }
 .page-head { padding-top: 4.5%; padding-bottom: 2%; text-transform: uppercase; }
 .page-foot { padding-bottom: 3.5%; padding-top: 1%; }
-.page.right .page-foot { justify-content: flex-end; }
-.page-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 7% 2% 12%; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; overscroll-behavior: contain;
+.page-foot { gap: 1.1em; }
+.page-foot .foot-label { display: flex; gap: 1.1em; min-width: 0; }
+.page-foot .foot-ch { letter-spacing: 0.02em; }
+/* A spread: the chapter and position on the left page, from the text column; the page numbers at the outer
+   corners, beside the corner buttons. */
+.page.left .page-foot { justify-content: flex-start; padding-left: calc(56px + 0.6em); }
+.page.left .page-foot .pno { order: -1; flex: none; width: max(2.4em, calc(var(--ml) - 56px - 0.6em - 1.1em)); }
+.page.right .page-foot { justify-content: flex-end; padding-right: max(7%, 40px); }
+.page.right .page-foot .foot-label { display: none; }
+.page-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 7% 2% var(--ml); scrollbar-width: thin; scrollbar-color: var(--rule) transparent; overscroll-behavior: contain;
+  /* a scroller starts its own touch-action in Chrome: keep sideways swipes for the book's page turns */
+  touch-action: pan-y;
   /* a soft shadow at the bottom only while there is more to scroll */
   background: linear-gradient(rgba(0,0,0,0), var(--paper) 70%) 0 100% / 100% 2.2em no-repeat local,
     radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,0.2), rgba(0,0,0,0)) 0 100% / 100% 0.9em no-repeat scroll; }
+/* a readable line length on very wide pages */
+.page-body > * { max-width: 40em; }
 .page h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.8em; line-height: 0.98; letter-spacing: -0.01em; margin: 0.25em 0 0.35em; }
 .page h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.85em; line-height: 1.1; margin: 0.3em 0 0.45em; }
 .page h3 { font-family: var(--f-display); font-weight: 400; font-size: 1.35em; line-height: 1.2; margin: 0.25em 0 0.5em; }
@@ -153,11 +178,23 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
 .page ul { margin: 0 0 0.8em; padding-left: 1.2em; }
 .page li + li { margin-top: 0.35em; }
 .page ul.tight li + li { margin-top: 0.55em; }
+/* a nested list: a step smaller and tighter, but never below the 14px floor */
+.page ul.sub { font-size: max(14px, 0.92em); line-height: 1.4; margin: 0.35em 0 0.2em; padding-left: 1.1em; }
+.page ul.sub li + li { margin-top: 0.25em; }
 .lbl { font-family: var(--f-mono); font-size: 0.72em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); display: inline-block; }
 .eyebrow { font-family: var(--f-mono); font-size: 0.74em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
 .muted { color: var(--ink-2); }
 .small { font-size: 0.88em; }
 .stack { display: flex; flex-direction: column; gap: 0.9em; }
+
+/* the covers, lying over the right half (front) or the left half (back) while the book is shut. The main
+   notebook's prerendered page carries both, each shown only when the head script (or App.jsx) marks it shut. */
+.cover-layer { position: absolute; top: 0; bottom: 0; left: 50%; width: 50%; z-index: 4; container-type: size; }
+.cover-layer.back { left: 0; display: none; }
+.overlay .book.at-back .cover-layer.front { display: none; }
+.overlay .book.at-back .cover-layer.back { display: block; }
+.main .cover-layer { display: none; }
+[data-cover='front'] .main .cover-layer.front, [data-cover='back'] .main .cover-layer.back { display: block; }
 
 /* cover of an entry book */
 .page.cover { background: var(--tone, var(--cover)); background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 6px); color: #F2EFE6; border-radius: 0 8px 8px 0; box-shadow: inset 18px 0 24px -18px rgba(0,0,0,0.5); }
@@ -165,6 +202,62 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
 .cover-art .lbl { color: rgba(242, 239, 230, 0.75); }
 .cover-title { font-family: var(--f-display); font-size: 2.4em; line-height: 1.05; border-top: 1px solid rgba(242,239,230,.4); border-bottom: 1px solid rgba(242,239,230,.4); padding: 0.5em 0; }
 .cover-foot { font-family: var(--f-mono); font-size: 0.72em; letter-spacing: 0.06em; color: rgba(242, 239, 230, 0.7); margin-top: auto; }
+/* the main notebook's cover: the whole cover is the open button; the art lets clicks through to it */
+.cover-open { position: absolute; inset: 0; width: 100%; border: none; background: transparent; cursor: pointer; padding: 0; }
+.cover-open:focus-visible { outline-offset: -8px; border-radius: 10px; }
+.cover-open + .cover-art { position: relative; pointer-events: none; }
+.cover-sub { font-family: var(--f-mono); font-size: 0.8em; letter-spacing: 0.04em; color: var(--cover-ink); }
+.cover-line { margin: 0; line-height: 1.45; color: var(--cover-ink); max-width: 22em; }
+.cover-resume { pointer-events: auto; align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; color: var(--cover-ink); font-family: var(--f-mono); font-size: 0.8em; letter-spacing: 0.06em; text-transform: uppercase; }
+.cover-prompt { display: flex; align-items: center; gap: 0.6em; }
+.cover-prompt .by-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .cover-prompt .by-touch { display: inline; }
+  .cover-prompt .by-mouse { display: none; }
+}
+.cover-arrow { display: inline-block; font-size: 1.4em; animation: nudge 1.4s ease-in-out infinite; }
+/* the back cover, seen from outside: its spine on the right */
+.page.cover.back-cover { border-radius: 8px 0 0 8px; box-shadow: inset -18px 0 24px -18px rgba(0,0,0,0.5); }
+.back-art { gap: 0.9em; }
+.back-art .cover-title { font-size: 2.1em; }
+.cover-email { font-family: var(--f-mono); font-size: max(14px, 0.85em); letter-spacing: 0.02em; color: var(--cover-ink); }
+.cover-actions { display: flex; flex-wrap: wrap; gap: 0.5em; }
+.cover-btn, .cover-restart {
+  min-height: 44px; display: inline-flex; align-items: center; padding: 0 0.9em; border-radius: 6px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--cover-ink) 40%, transparent); background: transparent; color: var(--cover-ink);
+  font: inherit; font-family: var(--f-mono); font-size: max(14px, 0.78em); letter-spacing: 0.04em; text-decoration: none;
+}
+.cover-btn:hover { background: color-mix(in srgb, var(--cover-ink) 12%, transparent); }
+.cover-actions .cover-btn:first-child { background: var(--cover-ink); color: var(--cover); border-color: var(--cover-ink); }
+.cover-restart { align-self: flex-start; border-color: transparent; padding: 0; text-decoration: underline; text-underline-offset: 0.25em; }
+.page.cover :focus-visible { outline-color: var(--cover-ink); }
+@keyframes nudge { 50% { transform: translateX(0.45em); } }
+
+/* ---------- contents in the left margin ---------- */
+.margin {
+  position: absolute; top: 0; bottom: 0; left: 0; width: var(--mw); z-index: 1; display: flex; flex-direction: column; gap: 0.7em;
+  /* the bottom clears the previous-page corner */
+  padding: 0.8em 0.7em 80px 0.9em; overflow: hidden auto; scrollbar-width: none; touch-action: pan-y;
+}
+.margin-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.mlink { font-family: var(--f-mono); font-size: 0.72em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.mlink:hover, .mback:hover, .margin li a:hover { color: var(--pen); }
+/* The book's own chrome: one layer over the pages and the turning leaf, so it holds still while the paper turns
+   under it. It fades while a cover turns and stays hidden while the book is shut. */
+.chrome { position: absolute; inset: 0; z-index: 7; pointer-events: none; container-type: inline-size; transition: opacity 0.2s ease; }
+.chrome > * { pointer-events: auto; }
+.book.closed .chrome, .book.covering .chrome { opacity: 0; visibility: hidden; transition: opacity 0.15s ease, visibility 0s linear 0.15s; }
+/* the theme toggle sits in the right page's top corner, level with the running head (cqi here is the whole spread) */
+.book-theme { position: absolute; top: max(6px, calc(2.25cqi - 14px)); right: 3.5cqi; }
+.page.with-theme .page-head { padding-right: calc(7% + 52px); }
+.foot-phone, .ribbon, .toc-panel { display: none; }
+.book-theme .iconbtn { border-color: color-mix(in srgb, var(--ink) 18%, transparent); color: var(--ink); }
+.book-theme .iconbtn:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.margin ol { list-style: none; padding: 0; margin: 0.2em 0 0; }
+.margin li a { font-family: var(--f-hand); line-height: 1.2; color: var(--ink-2); text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.margin li a[aria-current='true'] { color: var(--pen); }
+.margin .mark-wrap { white-space: normal; }
+.mback { margin-top: auto; flex: none; min-height: 44px; padding: 0; border: none; background: none; cursor: pointer; text-align: left; font-size: 0.82em; line-height: 1.25; color: var(--ink-2); }
 
 /* ---------- turning leaf ---------- */
 .leaves { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
@@ -181,61 +274,55 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
 
 /* ---------- corner turn buttons ---------- */
 .corner {
-  position: absolute; bottom: -6px; z-index: 5; width: 64px; height: 64px; border: none; cursor: pointer; background: transparent;
-  display: grid; padding: 0; color: var(--ink);
+  position: absolute; bottom: -6px; z-index: 5; width: 72px; height: 72px; border: none; cursor: pointer; background: transparent;
+  display: grid; padding: 6px; color: var(--ink);
 }
-.corner span {
-  width: 46px; height: 46px; display: grid; place-items: center; font-size: 26px; line-height: 1;
+.corner .ear {
+  width: 56px; height: 56px; display: grid; place-items: center; font-size: 28px; line-height: 1; padding: 16px 0 0 16px;
   background: linear-gradient(135deg, transparent 50%, var(--paper-2) 50%); border-radius: 0 0 6px 0;
-  box-shadow: -2px -2px 6px -3px rgba(0,0,0,0.25); transition: width 0.18s ease, height 0.18s ease;
+  box-shadow: -2px -2px 6px -3px rgba(0,0,0,0.25); transform-origin: 100% 100%; transition: transform 0.18s ease;
 }
-.corner.next { right: -6px; place-items: end end; padding: 6px; }
-.corner.prev { left: -6px; place-items: end start; padding: 6px; }
-.corner.prev span { background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%); border-radius: 0 0 0 6px; box-shadow: 2px -2px 6px -3px rgba(0,0,0,0.25); }
-.corner span { padding: 14px 0 0 14px; }
-.corner.prev span { padding: 14px 14px 0 0; }
-.corner:hover:not(:disabled) span { width: 56px; height: 56px; color: var(--pen); }
+.corner.next { right: -6px; place-items: end end; }
+.corner.prev { left: -6px; place-items: end start; }
+.corner.prev .ear { padding: 16px 16px 0 0; background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%); border-radius: 0 0 0 6px; box-shadow: 2px -2px 6px -3px rgba(0,0,0,0.25); transform-origin: 0 100%; }
+.corner:hover:not(:disabled) .ear, .corner:focus-visible .ear { transform: scale(1.12); color: var(--pen); }
+.corner .tip {
+  position: absolute; bottom: calc(100% - 4px); font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.04em; white-space: nowrap;
+  background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 4px; pointer-events: none;
+  opacity: 0; transform: translateY(4px); transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.corner.next .tip { right: 10px; }
+.corner.prev .tip { left: 10px; }
+.corner:hover .tip, .corner:focus-visible .tip { opacity: 1; transform: none; }
 .corner:disabled { opacity: 0; pointer-events: none; }
 .close {
   position: absolute; top: -12px; right: -14px; z-index: 6; width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
   background: var(--desk-ink); color: var(--desk); font-size: 24px; line-height: 1; box-shadow: 0 6px 16px -6px rgba(0,0,0,0.5);
 }
 
-/* ---------- chapter tabs on the book's edge ---------- */
-.book-tabs { position: absolute; top: calc(14px + 7%); left: calc(50% + var(--bw) / 2 + 16px); display: flex; flex-direction: column; gap: 6px; z-index: 0; }
-.btab {
-  writing-mode: vertical-rl; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;
-  background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--rule); border-left: none; border-radius: 0 7px 7px 0;
-  padding: 12px 8px; min-width: 32px; min-height: 44px; transition: transform 0.18s ease, color 0.18s ease;
-}
-.btab:hover { transform: translateX(3px); color: var(--ink); }
-.btab[aria-current='true'] { background: var(--paper); color: var(--pen); transform: translateX(3px); }
-
-/* ---------- status bar under the book ---------- */
-.book-bar { display: flex; align-items: center; justify-content: center; gap: 14px; width: var(--bw); max-width: 100%; }
+/* ---------- bottom bar: single-page mode only ---------- */
+.book-bar { display: none; flex: none; align-items: center; justify-content: center; gap: 14px; width: 100%; }
 .barbtn { min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--desk-ink) 18%, transparent); background: transparent; cursor: pointer; font-size: 14.5px; display: inline-flex; align-items: center; gap: 6px; }
 .barbtn:hover:not(:disabled) { border-color: var(--desk-ink); }
 .barbtn:disabled { opacity: 0.35; cursor: default; }
-.status { display: flex; align-items: baseline; gap: 10px; min-width: 0; text-align: center; }
-.status .ch { font-family: var(--f-display); font-size: 16px; }
-.status .pos { font-size: 12px; color: color-mix(in srgb, var(--desk-ink) 65%, transparent); }
 
-.toc { display: none; position: relative; }
+.toc { display: inline-block; position: relative; }
 .toc select { appearance: none; -webkit-appearance: none; min-height: 44px; padding: 0 30px 0 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--desk-ink) 18%, transparent); background: transparent; color: inherit; font: inherit; font-size: 14px; max-width: 46vw; }
 .toc::after { content: '▾'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 12px; }
 .toc option { color: #1A1F1B; background: #fff; }
 
 /* ---------- entry book overlay ---------- */
-.overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; animation: rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; overflow-y: auto; padding-block: 24px; }
+.overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; animation: rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; overflow: hidden; }
 .overlay.leaving { animation: sink 0.24s ease-in both; }
 .overlay-dim { position: fixed; inset: 0; background: color-mix(in srgb, var(--desk) 45%, #000 55%); opacity: 0.88; }
-.overlay .book-wrap { --bw: min(1140px, calc(100vw - 120px), calc((100dvh - 150px) * var(--ratio))); padding-top: 0; }
+.overlay .book-wrap { --gap: 0px; flex: none; width: 92vw; height: 92vh; height: 92dvh; }
 .overlay .book-bar { color: #F2EFE6; }
-.overlay .barbtn { border-color: rgba(242, 239, 230, 0.35); }
-.overlay .status .pos { color: rgba(242, 239, 230, 0.75); }
+.overlay .barbtn, .overlay .book-bar .iconbtn { border-color: rgba(242, 239, 230, 0.35); }
 .tone-oxblood { --tone: #6B2A24; }
 .tone-navy { --tone: #243A5E; }
 .tone-green { --tone: #2C4F3A; }
+/* an entry book's boards, spine shading and cover edges are its own tone, never the notebook's green */
+.tone-oxblood, .tone-navy, .tone-green { --cover: var(--tone); --cover-2: color-mix(in srgb, var(--tone) 70%, #000); }
 .overlay .book::before { background-color: var(--tone); }
 @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes sink { to { opacity: 0; transform: translateY(24px) scale(0.97); } }
@@ -250,23 +337,35 @@ main.behind .book-bar, main.behind .book-tabs { visibility: hidden; }
 }
 .btn:hover { border-color: var(--ink); }
 .btn.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.contents { border-top: 1px solid var(--rule); padding-top: 0.8em; }
-.contents ol { list-style: none; padding: 0; margin: 0.5em 0 0.8em; }
-.contents li { display: flex; align-items: baseline; gap: 0.5em; margin: 0; padding: 0.3em 0; }
-.contents li a { text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
-.contents li a:hover { color: var(--pen); }
-.contents .dots { flex: 1; border-bottom: 1.5px dotted var(--rule); transform: translateY(-0.3em); }
-.contents .num { font-size: 0.8em; color: var(--ink-2); }
 
 .entry-meta { display: flex; flex-wrap: wrap; gap: 0.3em 0.9em; align-items: baseline; }
 .entry-meta .no { font-family: var(--f-mono); font-size: 0.8em; color: var(--pen); letter-spacing: 0.04em; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0 0 0.9em; padding: 0 !important; list-style: none; }
 .chips li { font-family: var(--f-mono); font-size: 0.74em; background: var(--chip); border-radius: 999px; padding: 0.3em 0.8em; margin: 0 !important; }
+/* a project's pipeline: chips joined by arrows, wrapping as needed */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em 0; margin: 0.3em 0 0.8em; padding: 0 !important; list-style: none; font-family: var(--f-mono); font-size: 0.74em; }
+.flow li { display: flex; align-items: center; margin: 0 !important; }
+.flow .arr { color: var(--ink-2); padding: 0 0.45em; }
+.flow .step { background: var(--chip); border: 1.5px solid transparent; border-radius: 999px; padding: 0.25em 0.75em; white-space: nowrap; }
+.flow .key .step { border-color: var(--pen); color: var(--pen); }
+.page ul.decisions { margin: 0.3em 0 0.8em; }
+.page ul.decisions li + li { margin-top: 0.25em; }
 .qsr { display: grid; grid-template-columns: 6.2em minmax(0, 1fr); gap: 0.5em 0.9em; margin: 0.5em 0 1em; }
 .qsr dt { font-family: var(--f-mono); font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding-top: 0.35em; }
 .qsr dd { margin: 0; }
 
 .statpage { display: flex; flex-direction: column; gap: 0.6em; }
+/* the live run and the result figures grow into the page's free height */
+.page-body > .statpage, .page-body > .stack:has(> .console) { min-height: 100%; }
+.statpage > .fig { flex: 1 1 auto; max-height: 28em; display: flex; flex-direction: column; }
+.statpage > .fig > :first-child { flex: 1; }
+.statpage .fig > div:has(> .bars) { display: flex; flex-direction: column; }
+.statpage .bars { flex: 1; grid-auto-rows: 1fr; }
+.statpage .bar .track { height: clamp(1.25em, 4cqh, 2.4em); }
+.statpage .gainmini { grid-auto-rows: 1fr; }
+.statpage .gainmini li { align-items: center; }
+.statpage .dots { grid-auto-rows: 1fr; align-items: center; }
+.statpage .pt { width: clamp(0.85em, 2cqh, 1.1em); height: clamp(0.85em, 2cqh, 1.1em); }
 .stat .big { display: block; font-size: 3.2em; line-height: 1; letter-spacing: -0.03em; }
 .stat .what { display: block; margin-top: 0.35em; color: var(--ink-2); }
 .runrow, .endnav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6em 1em; margin-top: 0.3em; }
@@ -400,9 +499,20 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .skillgrid dd { margin: 0; font-size: 0.92em; }
 .certs { list-style: none; padding: 0 !important; margin: 0.5em 0 0; display: grid; gap: 0.5em; }
 .certs li { display: flex; justify-content: space-between; gap: 0.6em; border-bottom: 1px solid var(--rule); padding-bottom: 0.5em; flex-wrap: wrap; margin: 0 !important; }
-.next-entry { border: 1.5px dashed var(--rule); border-radius: 6px; padding: 0.7em 0.9em; }
-.next-entry p { margin-bottom: 0.3em; }
-.contact .big-mail { font-family: var(--f-display); font-size: 1.55em; line-height: 1.15; margin: 0.2em 0 0.7em; display: block; text-decoration: none; overflow-wrap: anywhere; }
+/* Entry 4: predictions in red pen, progress as a notebook checklist */
+.preds { list-style: none; padding: 0 !important; margin: 0.3em 0 0.9em; }
+.preds li { margin: 0 !important; padding: 0.4em 0; border-bottom: 1px solid var(--rule); }
+.preds li:last-child { border-bottom: none; }
+.preds .lbl { display: block; }
+.preds .pred { display: block; font-family: var(--f-hand); color: var(--pen); line-height: 1.3; }
+.progress { list-style: none; padding: 0 !important; margin: 0.3em 0 0.6em; font-family: var(--f-mono); font-size: max(14px, 0.8em); }
+.progress li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr); margin: 0 !important; padding: 0.15em 0; }
+.progress .done .st { color: var(--good); }
+.progress .doing .st { color: var(--pen); }
+.progress .todo { color: var(--ink-2); }
+.contact .big-mail { font-family: var(--f-display); font-size: 1.55em; line-height: 1.15; margin: 0.2em 0 0.7em; display: block; text-decoration: none; overflow-wrap: normal; }
+/* the address is 16.6em wide and the text column at least 81% of the page */
+.contact .big-mail { font-size: min(1.55em, 4.75cqi); }
 .colophon { font-family: var(--f-mono); font-size: 0.72em; color: var(--ink-2); margin-top: 1.6em !important; }
 
 /* ---------- console (trace replay) ---------- */
@@ -416,6 +526,8 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .req { flex: none; font: inherit; font-size: 0.95em; color: var(--console-ink); background: var(--console-2); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 0.45em 0.85em; min-height: 36px; cursor: pointer; white-space: nowrap; }
 .req[aria-pressed='true'] { border-color: var(--console-pen); color: #fff; }
 .screen { background: var(--console-2); border-radius: 6px; height: 22em; overflow-y: auto; padding: 0.7em 0.8em; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #2f3a34 transparent; }
+.stack > .console { flex: 1 1 auto; display: flex; flex-direction: column; }
+.stack > .console .screen { flex: 1 1 auto; height: auto; min-height: 22em; max-height: 40em; }
 .tl { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 0.6em; padding: 0.15em 0; }
 .tl .who { color: var(--console-dim); font-size: 0.86em; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.1em; }
 .tl .what { overflow-wrap: anywhere; }
@@ -427,56 +539,180 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 @keyframes lineIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .caret { display: inline-block; width: 0.55em; height: 1em; background: var(--console-dim); vertical-align: -0.15em; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
-.console-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; padding: 0.6em 0.2em 0; flex-wrap: wrap; }
+.console-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; padding: 0.6em 0.2em 0; flex-wrap: wrap; container: trace-foot / inline-size; }
 .controls { display: flex; gap: 0.35em; align-items: center; }
 .cbtn { font: inherit; font-size: 0.95em; color: var(--console-ink); background: transparent; border: 1px solid rgba(255,255,255,0.16); border-radius: 5px; min-width: 40px; min-height: 36px; padding: 0 0.6em; cursor: pointer; }
 .cbtn:hover:not(:disabled) { border-color: rgba(255,255,255,0.45); }
 .cbtn:disabled { opacity: 0.4; cursor: default; }
 .step { color: var(--console-dim); font-size: 0.9em; min-width: 4em; text-align: center; }
-.console-note { color: var(--console-dim); font-size: 0.85em; }
-
-@media (max-height: 800px) and (min-width: 900px) and (min-aspect-ratio: 11/10) {
-  .intro .contents { display: none; }
+.console-note { color: var(--console-dim); font-size: 0.85em; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The note stays on one line: the full one is 45 monospace characters at 0.85em (about 38.3ch of the footer),
+   so a narrower footer shows the short one. Re-check this width if TRACE_SOURCE changes length. */
+.note-short { display: none; }
+@container trace-foot (max-width: 39ch) {
+  .note-long { display: none; }
+  .note-short { display: inline; }
 }
 
 /* ---------- single-page mode: phones and narrow or tall screens ---------- */
-@media (max-width: 899px), (max-aspect-ratio: 11/10) {
-  .book-wrap { --bw: min(calc(100vw - 28px), 720px); --bh: min(calc(100dvh - 140px), calc(var(--bw) * 1.55)); padding-top: 10px; gap: 22px; }
-  .book { width: var(--bw); height: var(--bh); }
+/* Must match SINGLE_MQ in Book.jsx. */
+@media (max-width: 899px), (max-aspect-ratio: 11/10), (max-height: 500px) {
+  .book-wrap {
+    --gap: 10px; gap: 18px;
+    padding: calc(var(--gap) + 8px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + 8px)
+      max(8px, env(safe-area-inset-bottom, 0px)) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 10px);
+  }
+  .overlay .book-wrap { --gap: 0px; }
+  .book-bar { display: flex; }
   .book::before { inset: -8px -8px -10px -10px; border-radius: 10px; background-image: linear-gradient(90deg, var(--cover-2) 0 3%, transparent 8%); }
   .book::after { inset: 2px -3px -5px 0; }
-  .book.closed::before, .book.closed::after { left: 0; }
-  .book.closed::before { left: -10px; }
+  /* either cover lies over the one page, so the shut book takes the same place as the open one */
+  .overlay .book.closed::after, .overlay .book.closed.at-back::after, [data-cover] .main .book.closed::after { left: 0; right: -3px; }
+  .overlay .book.closed::before, .overlay .book.closed.at-back::before, [data-cover] .main .book.closed::before { left: -10px; right: -8px; }
+  [data-cover] .main .book.closed { transform: none; }
+  .cover-layer, .cover-layer.back { left: 0; width: 100%; }
+  .page.cover.back-cover { border-radius: 2px 8px 8px 2px; box-shadow: inset 18px 0 22px -20px rgba(0, 0, 0, 0.5); }
+  /* the spread's two pages lie on top of each other; only the current one shows */
   .pages { grid-template-columns: 1fr; }
-  .book[data-side='left'] .slot:nth-child(2), .book[data-side='right'] .slot:nth-child(1) { display: none; }
-  .book.opening .slot:first-child .page.blank, .book.closed .slot:first-child .page { visibility: visible; }
+  .slot { grid-area: 1 / 1; }
+  .book[data-side='left'] .slot:nth-child(2), .book[data-side='right'] .slot:nth-child(1) { visibility: hidden; }
   .spine { left: -10px; top: -8px; bottom: -10px; width: 12px; background: linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0)); }
   .page.left, .page.right { border-radius: 2px 8px 8px 2px; box-shadow: inset 18px 0 22px -20px rgba(0, 0, 0, 0.3); }
-  .page.right .page-foot { justify-content: flex-start; }
-  .page { font-size: clamp(14px, min(2.3cqi, 1.9cqh), 18px); }
-  .page-head, .page-foot { padding-left: 13%; padding-right: 6%; }
-  .page-body { padding: 1% 6% 2% 13%; }
-  .page:not(.cover)::before { left: 9%; }
-  .book-tabs { display: none; }
-  .toc { display: inline-block; }
-  .book-bar .status .ch { display: none; }
-  .intro .contents { display: none; }
+  /* the old footer: chapter, position and number from the text column on the right page, the number alone on the left */
+  .page.left .page-foot, .page.right .page-foot { justify-content: flex-start; padding-left: var(--ml); }
+  .page.left .page-foot .pno { order: 0; width: auto; }
+  .page.left .page-foot .foot-label { display: none; }
+  .page.right .page-foot .foot-label { display: flex; }
+  /* no room for a margin column: the bottom bar's picker stands in for it */
+  .page, .page.with-margin { --ml: 13%; --rule-x: 9%; }
+  .margin, .book-theme { display: none; }
+  .page.with-theme .page-head { padding-right: 6%; }
+  .page-head, .page-foot, .page.right .page-foot, .page-body { padding-right: 6%; }
   .corner { bottom: -4px; }
   .corner.next { right: -4px; }
-  .corner.prev { left: auto; right: 54px; }
-  .corner.prev span { background: transparent; box-shadow: none; }
+  .corner.prev { left: auto; right: 62px; }
+  .corner.prev .ear { background: transparent; box-shadow: none; }
   .close { top: -10px; right: -8px; }
-  .overlay .book-wrap { --bw: min(calc(100vw - 28px), 720px); --bh: min(calc(100dvh - 120px), calc(var(--bw) * 1.55)); }
   .bt { display: none; }
   .page h1 { font-size: 2.55em; }
   .stat .big { font-size: 2.7em; }
 }
+
+/* ---------- phones, upright or sideways: one page from the desktop spread ---------- */
+/* The cover's edge and the spine's shadow on the left, the running head and theme toggle on one row at the top,
+   the chapter and page number between the dog-ears at the bottom, the contents behind a bookmark ribbon. */
+@media (max-width: 599px), (orientation: landscape) and (max-height: 500px) {
+  /* a thin desk edge, then about 8px of cover */
+  .book-wrap, .overlay .book-wrap {
+    --gap: 6px; gap: 0;
+    padding: calc(max(var(--gap), env(safe-area-inset-top, 0px)) + 8px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + 8px)
+      calc(max(var(--gap), env(safe-area-inset-bottom, 0px)) + 10px) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 10px);
+  }
+  /* the small viewport height, so the book (and every em in it) holds still as the address bar shows or hides */
+  .desk { height: 100vh; height: 100svh; }
+  /* close enough that the lifting page reads as lifting, not squashing, without the free edge ballooning past the screen */
+  .book { perspective: 1800px; }
+  .overlay .book-wrap { width: 100vw; height: 100vh; height: 100svh; }
+  .book-bar { display: none; }
+  /* sideways: the same single page, centred */
+  @media (orientation: landscape) {
+    .book-wrap, .overlay .book-wrap { width: 100%; max-width: 560px; margin: 0 auto; }
+  }
+
+  .page { font-size: clamp(15px, min(2.05cqh, 4.2cqi), 18px); }
+  .page, .page.with-margin { --ml: 48px; --rule-x: 36px; }
+  .page-body { padding: 0.2em 16px 0.6em var(--ml); }
+
+  /* top row: the running head on one line, the theme toggle at its right end */
+  .book-theme { display: block; top: 4px; right: 8px; }
+  .page-head, .page.with-theme .page-head {
+    min-height: 52px; align-items: center; padding: 4px 60px 0 var(--ml); font-size: 14px; letter-spacing: 0.04em;
+  }
+  .page-head > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* an entry book's close button joins the row, and the toggle steps left of it */
+  .overlay .book-theme { right: 56px; }
+  .overlay .page-head, .overlay .page.with-theme .page-head { padding-right: 108px; }
+  .overlay .close { top: 4px; right: 8px; }
+
+  /* footer row: chapter and position between the dog-ears */
+  .page-foot, .page.left .page-foot, .page.right .page-foot { min-height: 64px; align-items: center; justify-content: center; padding: 0 60px; font-size: 14px; letter-spacing: 0.02em; }
+  .page-foot > * { display: none; }
+  .page-foot > .foot-phone { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .corner.prev { left: -4px; right: auto; }
+  .corner.prev .ear { background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%); box-shadow: 2px -2px 6px -3px rgba(0,0,0,0.25); }
+
+  /* the bookmark ribbon, hanging in the margin left of the red rule */
+  .ribbon {
+    display: block; position: absolute; top: 0; left: 4px; z-index: 2; width: 28px; height: 104px; padding: 0 0 10px;
+    border: none; border-radius: 0; cursor: pointer; background: var(--cover); color: var(--cover-ink);
+    font-family: var(--f-mono); font-size: 14px; letter-spacing: 0.08em; writing-mode: vertical-rl;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 8px), 0 100%);
+    box-shadow: inset -3px 0 0 rgba(0, 0, 0, 0.18);
+  }
+  .overlay .ribbon { background: var(--tone, var(--cover)); }
+  /* above the open panel, so a second tap closes it */
+  .ribbon[aria-expanded='true'] { z-index: 3; }
+  /* a wider target than the ribbon itself, still short of the text */
+  .ribbon::after { content: ''; position: absolute; inset: 0 -8px 0 -4px; }
+  .ribbon:focus-visible { outline-offset: -4px; clip-path: none; }
+
+  /* the contents panel: the margin's contents on a sheet of paper, slid out over the page */
+  .toc-panel { display: block; position: absolute; inset: 0; z-index: 1; visibility: hidden; transition: visibility 0s linear 0.25s; }
+  .toc-panel.open { visibility: visible; transition-delay: 0s; }
+  .toc-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); opacity: 0; transition: opacity 0.25s ease; }
+  .toc-sheet {
+    position: absolute; top: 0; bottom: 0; left: 0; width: min(78%, 300px); border-radius: 2px 8px 8px 2px;
+    background-color: var(--paper); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 1.6em 1.6em; color: var(--ink); box-shadow: 12px 0 30px -12px rgba(0, 0, 0, 0.45);
+    transform: translateX(-104%); transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .toc-panel.open .toc-scrim { opacity: 1; }
+  .toc-panel.open .toc-sheet { transform: none; }
+  .toc-sheet .margin { display: flex; position: static; width: auto; height: 100%; font-size: 17px; padding: 12px 16px 16px 44px; }
+  .toc-sheet .mlink, .toc-sheet .lbl { font-size: 14px; }
+  .toc-sheet .margin li a { font-size: 1.2em; }
+  .toc-sheet .mback { font-size: 15px; }
+
+  /* type scale */
+  .page h1 { font-size: 2.2em; }
+  .page h2 { font-size: 1.5em; }
+  .stat .big { font-size: 2.4em; }
+  /* prose set smaller than 1em stays at or above 14px */
+  .page .btn, .skillgrid dd { font-size: max(14px, 0.92em); }
+  .page .small, .failcard p { font-size: max(14px, 0.88em); }
+  figcaption, .arch .node span, .facts span:last-child { font-size: max(14px, 0.8em); }
+
+  /* result figures: the tag gets its own line above the journey and its change, and the figure grows to hold them */
+  .statpage > .fig { max-height: none; }
+  .gainmini li { grid-template-columns: minmax(0, 1fr) auto; gap: 0.2em 0.6em; }
+  .gainmini li > :first-child { grid-column: 1 / -1; }
+
+  /* The console fits the page's width and keeps one fixed height: never the space left on the page, never its
+     number of lines. Its screen scrolls on its own; a page too short for it scrolls inside itself. */
+  .console { max-width: 100%; min-width: 0; }
+  .console-head { flex-wrap: wrap; }
+  .stack > .console { flex: none; }
+  .stack > .console .screen { flex: none; height: 22em; min-height: 0; max-height: none; }
+  .requests { flex: none; height: calc(36px + 0.6em); }
+  .page-body > .stack:has(> .console) { justify-content: center; }
+
+  /* the short pages (intro, skills, certifications) get room to breathe instead of bunching at the top */
+  .intro h1 { margin: 0.6em 0 0.5em; }
+  .intro .lede { line-height: 1.65; margin-bottom: 1.4em; }
+  .skillgrid { row-gap: 1.1em; margin-top: 1em; }
+  .certs { gap: 1em; margin-top: 1em; }
+  .certs li { padding-bottom: 0.9em; }
+
+  /* Contact: the running head already says Contact */
+  .contact > .lbl { display: none; }
+  .page-body > .contact { min-height: 100%; display: flex; flex-direction: column; justify-content: center; }
+}
 @media (max-width: 420px) {
-  .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6em; }
+  /* the first column is never narrower than its longest word ("neighbourhoods") */
+  .facts { grid-template-columns: minmax(min-content, 1fr) repeat(2, minmax(0, 1fr)); gap: 0.6em; }
   .facts .big { font-size: 1.3em; }
   .qsr { grid-template-columns: minmax(0, 1fr); gap: 0.1em; }
   .qsr dd { margin-bottom: 0.5em; }
-  .deskbar { padding-top: 6px; padding-bottom: 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

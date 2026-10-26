@@ -17,13 +17,19 @@ npm run preview    # serve dist/ to check the build
 
 ## How the site is organised
 
-The whole site is one open notebook. Each screen is a spread: two pages side by side, or one page at a time on phones. The corner of the page turns it; so do the arrow keys, a swipe, and the tabs on the book's edge. Each project's "Run the full entry" opens a second, smaller book on top with the full case study.
+The whole site is one open notebook that fills the screen. Each screen is a spread: two pages side by side, or one page at a time on phones. The corner of the page turns it; so do the arrow keys and a swipe. Each project's "Run the full entry" opens a second, slightly smaller book on top with the full case study.
+
+The left page of every spread has a margin column, like handwritten notes beside the red rule. It holds the Resume link, then the book's contents: one link per chapter, with the current chapter underlined in red pen. Clicking a chapter turns to it. In an entry book the margin lists that entry's chapters and ends with "← Back to the notebook". The theme toggle sits in the right page's top corner, and the right page's footer names the chapter and the spread ("Entry 1 3 / 7"). On tablets and tall, narrow screens there is no room for the margin, so a bottom bar with back, a contents picker, next and the theme toggle takes its place.
+
+Every load of the home page starts with the notebook closed: just its front cover, centred on the desk. A click, a tap, Enter, a swipe, the mouse wheel or the right arrow opens it. Links to a chapter or an entry skip the cover, as does "reduce motion". Turning back from the first page closes the cover again. Turning forward from the last spread closes the notebook onto its back cover (`/#end`), with the email, links and a "Back to the first page" button. An entry book closes the same way at either end and sinks back to the spread it was opened from.
+
+On a phone, upright or sideways, the notebook shows one page at a time, drawn like one page of the desktop spread: the cover's edge and the spine's shadow down the left, the running head and theme toggle on one row at the top, and the chapter and page number between the two dog-ears at the bottom. Sideways, the page is centred and at most 560px wide. A bookmark ribbon in the left margin slides out the contents (with the resume link) on a paper panel; choosing a chapter, tapping outside, Escape or the ribbon again closes it.
 
 | What | File |
 |---|---|
 | The main notebook: every page, in order (left, right, left, right…) and its chapters | `src/book/mainBook.jsx` |
 | The three entry books (full case studies), one object each | `src/book/entryBooks.jsx` |
-| The book itself: spreads, page turns, tabs, keys, swipe | `src/book/Book.jsx` |
+| The book itself: spreads, page turns, margin contents, keys, swipe | `src/book/Book.jsx` |
 | URLs, page titles and descriptions | `src/routes.jsx` |
 | Main notebook vs entry book overlay | `src/App.jsx` |
 | Agent runs replayed in the console | `src/data/traces.js` |
@@ -37,10 +43,10 @@ The whole site is one open notebook. Each screen is a spread: two pages side by 
 
 - **Change a number:** search for it in `src/book/`. Most numbers appear in the main notebook and again in the entry book.
 - **Edit a page:** each page is `{ head, render }`. `head` is the small running title at the top; `render` returns the page's content. Pages are paired into spreads in order, so keep the count even.
-- **Pages must fit.** A page is a fixed size, like paper. If you add text, check it at a laptop size (1366×768). On short screens and phones a long page scrolls inside itself, with a shadow at the bottom.
+- **Pages must fit.** A page takes the screen's shape, and its text size follows the page's height (14–20px). If you add text, check it at a laptop size (1366×768). On short screens and phones a long page scrolls inside itself, with a shadow at the bottom.
 - **Add a red-pen note:** `<Pen>…</Pen>`. Circle or underline a phrase: `<Mark>4/4</Mark>`, `<Mark kind="under">…</Mark>`, `<Mark kind="strike">…</Mark>`.
 - **Add a project:** add two pages to `mainPages` and a chapter to `mainChapters`, add an entry book to `entryBooks`, and add its route to `src/routes.jsx`.
-- **Link to a spread:** `https://ansh-66.github.io/#graph-rag`. Link to a full entry: `https://ansh-66.github.io/work/graph-rag/`.
+- **Link to a spread:** `https://ansh-66.github.io/#graph-rag` (`/#end` is the back cover). Link to a full entry: `https://ansh-66.github.io/work/graph-rag/`.
 - **Make the GoodFoods repo public:** replace "Repo: coming soon" on the last page of its entry book with `<Ext href="…">Code on GitHub</Ext>`.
 
 ## Deploying
@@ -49,4 +55,4 @@ Every push to `main` builds and deploys through `.github/workflows/deploy.yml`. 
 
 ## How the page turn works
 
-`src/book/Book.jsx`. A turning leaf is drawn over the half that moves, with the current page on its front and the next page on its back, and rotated around the spine with the Web Animations API. Only `transform` is animated, so it runs on the GPU. On phones a single page turns around the binding on its left edge. A click during a turn finishes it at once. With "reduce motion" switched on, pages change without the turn.
+`src/book/Book.jsx`. A turning leaf is drawn over the half that moves, with the current page on its front and the next page on its back, and rotated around the spine with the Web Animations API. Only `transform` is animated, so it runs on the GPU. On tablets and phones a single page turns around the binding on its left edge. A click during a turn finishes it at once. With "reduce motion" switched on, pages change without the turn.

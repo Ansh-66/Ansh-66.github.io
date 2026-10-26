@@ -30,7 +30,9 @@ for (const p of pages) {
     p.path === '*' ? '<meta name="robots" content="noindex" />' : `<link rel="canonical" href="${SITE}${url}" /><meta property="og:url" content="${SITE}${url}" />`,
     preloads,
   ].join('\n    ');
-  const html = template.replace('<!--head-->', head).replace('<!--app-->', render(url));
+  const html = template
+    .replace('<!--head-->', head)
+    .replace('<div id="root"><!--app-->', `<div id="root" data-path="${esc(url)}">${render(url)}`);
   const out = p.path === '*' ? path.join(dist, '404.html') : path.join(dist, url, 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, html);

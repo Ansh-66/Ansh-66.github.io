@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import Book from './book/Book.jsx';
-import { mainChapters, mainPages } from './book/mainBook.jsx';
+import { mainBackCover, mainChapters, mainCover, mainPages } from './book/mainBook.jsx';
 import { entryBooks } from './book/entryBooks.jsx';
 import { findRoute } from './routes.jsx';
-import { LINKS, ThemeToggle, hydration, prefersReducedMotion } from './components/ui.jsx';
+import { hydration, prefersReducedMotion, useIso } from './components/ui.jsx';
 
 const chapterIndex = (id) => Math.max(0, mainChapters.findIndex((c) => c.id === id));
 const hashChapter = (hash) => {
@@ -39,6 +39,13 @@ function EntryBook({ entry, onClose }) {
       <span className="cover-foot">Ansh Kumar Singh · lab notebook</span>
     </div>
   );
+  // the entry's own back cover: its number and title only
+  const backCover = () => (
+    <div className="cover-art">
+      <span className="lbl">{entry.no}</span>
+      <span className="cover-title">{entry.title}</span>
+    </div>
+  );
   return (
     <div className={`overlay tone-${entry.tone}${leaving ? ' leaving' : ''}`} role="dialog" aria-modal="true" aria-label={entry.title} ref={closeRef}>
       <div className="overlay-dim" onClick={close} />
@@ -50,7 +57,7 @@ function EntryBook({ entry, onClose }) {
         spread={spread}
         onSpread={setSpread}
         cover={cover}
-        tabs={false}
+        backCover={backCover}
         onClose={close}
       />
     </div>
@@ -70,11 +77,36 @@ export default function App() {
     hydration.done = true;
   }, []);
 
+  // The notebook's covers: false (open), 'front' or 'back'. "/" opens shut on its front cover on every load,
+  // "/#end" on its back cover. The prerendered page is the shut front cover over the first spread; which
+  // cover shows, if any, is decided here, after hydration (the head script in index.html makes the same call
+  // before the first paint, so a deep link never flashes a cover).
+  const isHome = route.path === '/';
+  const [closed, setClosed] = useState(isHome ? 'front' : false);
+  useIso(() => {
+    if (closed !== 'front') return;
+    if (location.hash === '#end') setClosed('back');
+    else if (location.hash || prefersReducedMotion()) setClosed(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useIso(() => {
+    if (closed) document.documentElement.dataset.cover = closed;
+    else delete document.documentElement.dataset.cover;
+  }, [closed]);
+  // Shutting a cover gives the URL "/" (front) or "/#end" (back); opening hands it back to onSpread.
+  const onCover = useCallback((state) => {
+    setClosed(state);
+    if (state) window.history.replaceState(window.history.state, '', state === 'back' ? '/#end' : '/');
+  }, []);
+
   useEffect(() => {
     if (route.entry) setSpread(chapterIndex(route.entry));
+    else if (location.hash === '#end') setClosed('back');
     else {
       const i = hashChapter(location.hash);
-      if (i >= 0) setSpread(i);
+      if (i >= 0) {
+        setSpread(i);
+        setClosed(false);
+      }
     }
   }, [location.pathname, location.hash]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -96,13 +128,6 @@ export default function App() {
 
   return (
     <div className="desk">
-      <header className="deskbar">
-        <Link className="brand" to="/">Ansh Kumar Singh</Link>
-        <nav aria-label="Site">
-          <a className="navlink" href={LINKS.resume} target="_blank" rel="noopener">Resume</a>
-          <ThemeToggle />
-        </nav>
-      </header>
       {route.missing && (
         <p className="notice" role="status">
           That page isn’t in the notebook. Here’s the first page instead.
@@ -116,6 +141,10 @@ export default function App() {
           chapters={mainChapters}
           spread={spread}
           onSpread={onSpread}
+          cover={mainCover}
+          backCover={mainBackCover}
+          shut={closed}
+          onShut={onCover}
           active={!entry}
         />
       </main>

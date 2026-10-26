@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // True while a page is being drawn on a turning leaf. Components render their
 // finished state there and skip observers and timers.
@@ -15,6 +15,9 @@ export const LINKS = {
   ragRepo: 'https://github.com/Ansh-66/rag-from-scratch',
   agentsRepo: 'https://github.com/Ansh-66/single-vs-multi-agent',
 };
+
+// A layout effect in the browser, a plain effect on the server (where layout effects warn).
+export const useIso = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -119,14 +122,15 @@ export function Ext({ href, children, className = 'ext' }) {
   );
 }
 
-export function CopyEmail({ className = 'btn' }) {
+/** target: the id of the address shown as text, selected for the reader when the clipboard is refused. */
+export function CopyEmail({ className = 'btn', target = 'email-text' }) {
   const [state, setState] = useState('idle');
   const onClick = async () => {
     try {
       await navigator.clipboard.writeText(EMAIL);
       setState('done');
     } catch (e) {
-      const el = document.getElementById('email-text');
+      const el = document.getElementById(target);
       if (el) {
         const r = document.createRange();
         r.selectNodeContents(el);

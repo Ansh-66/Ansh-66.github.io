@@ -41,10 +41,10 @@ const End = ({ slug, next, nextTitle }) => (
   </div>
 );
 
-/* ============ Entry 3 · Reservation agent ============ */
+/* ============ Entry 1 · Reservation agent ============ */
 const goodfoods = {
   slug: 'reservation-agent',
-  no: 'Entry 3',
+  no: 'Entry 1',
   title: 'Restaurant Reservation Agent',
   tone: 'oxblood',
   chapters: [
@@ -407,10 +407,10 @@ const graph = {
   ],
 };
 
-/* ============ Entry 1 · RAG from scratch ============ */
+/* ============ Entry 3 · RAG from scratch ============ */
 const rag = {
   slug: 'rag-from-scratch',
-  no: 'Entry 1',
+  no: 'Entry 3',
   title: 'RAG from Scratch',
   tone: 'green',
   chapters: [

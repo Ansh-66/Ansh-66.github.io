@@ -1,34 +1,48 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { StaticContext, prefersReducedMotion } from '../components/ui.jsx';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { LINKS, Mark, StaticContext, ThemeToggle, prefersReducedMotion, useIso } from '../components/ui.jsx';
 
-const useIso = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
-
-// Single-page mode: phones, and any screen too narrow or tall for a spread.
+// Single-page mode: phones (upright or sideways), and any screen too narrow or tall for a spread.
 // Must match the media query in styles.css.
-export const SINGLE_MQ = '(max-width: 899px), (max-aspect-ratio: 11/10)';
+export const SINGLE_MQ = '(max-width: 899px), (max-aspect-ratio: 11/10), (max-height: 500px)';
 const isSingle = () => typeof window !== 'undefined' && window.matchMedia(SINGLE_MQ).matches;
+const canAnimate = () => !prefersReducedMotion() && typeof Element !== 'undefined' && 'animate' in Element.prototype;
+const parity = (i) => ((i % 2) + 2) % 2;
 
 export const BookContext = createContext({ go: () => {}, active: true });
 export const useBook = () => useContext(BookContext);
 
 /**
- * A two-page notebook.
+ * A two-page notebook between a front and a back cover.
  *
- * pages:    [{ head, render }]  — pages[2s] is the left page of spread s, pages[2s + 1] the right.
- * chapters: [{ id, label }]     — one per spread, used for tabs and the status line.
- * spread:   current spread (controlled).
- * onSpread: called with the new spread after a turn has finished.
- * cover:    optional render() for a cover that opens when the book first appears.
+ * pages:     [{ head, render }]  — pages[2s] is the left page of spread s, pages[2s + 1] the right.
+ * chapters:  [{ id, label }]     — one per spread, listed in the left page's margin and named in the right page's footer.
+ * spread:    current spread (controlled).
+ * onSpread:  called with the new spread after a turn has finished.
+ * cover, backCover: render({ open }) / render({ toStart }) for the outside of the two covers.
+ * shut, onShut: the main notebook's covers, controlled: false, 'front' or 'back'. Without onShut the book
+ *            keeps its own: it opens by itself when it first appears, and closing either cover calls onClose.
  */
-export default function Book({ pages, chapters, spread, onSpread, cover, variant = 'main', active = true, tabs = true, title, onClose }) {
+export default function Book({ pages, chapters, spread, onSpread, cover, backCover, shut: shutProp, onShut, variant = 'main', active = true, title, onClose }) {
   const [side, setSide] = useState(0); // single-page mode: 0 = left page of the spread, 1 = right
   const [flip, setFlip] = useState(null);
-  const [opening, setOpening] = useState(!!cover);
+  // The turn has landed: the pages underneath already show where it ends, and the leaf goes on the next frame.
+  const [settling, setSettling] = useState(false);
+  const held = !!onShut;
+  const [ownShut, setOwnShut] = useState(cover ? 'front' : false);
+  const shut = held ? shutProp : ownShut;
+  // Phones only: the contents, slid out from the bookmark ribbon.
+  const [tocOpen, setTocOpen] = useState(false);
+  const ribbon = useRef(null);
+  const panel = useRef(null);
+  const bookEl = useRef(null);
   const leaf = useRef(null);
   const shadeA = useRef(null);
   const shadeB = useRef(null);
   const anim = useRef(null);
-  const nSpreads = Math.ceil(pages.length / 2);
+  // Set the moment a turn starts and cleared once its leaf is gone, so a second request in the same frame sees it.
+  const busy = useRef(false);
+  const N = pages.length;
+  const nSpreads = Math.ceil(N / 2);
 
   // An outside change of spread (hash, route) lands on the left page, without a turn.
   const lastSpread = useRef(spread);
@@ -39,99 +53,173 @@ export default function Book({ pages, chapters, spread, onSpread, cover, variant
     }
   }, [spread]);
 
-  const pageIndex = spread * 2 + side;
-
-  const commit = useCallback(
-    (f) => {
-      setFlip(null);
-      if (f.kind === 'open') {
-        setOpening(false);
-        return;
+  const setShut = useCallback(
+    (s) => {
+      if (held) onShut(s);
+      else {
+        setOwnShut(s);
+        if (s && onClose) onClose();
       }
-      if (f.toSpread !== spread) {
-        lastSpread.current = f.toSpread;
-        onSpread(f.toSpread);
-      }
-      setSide(f.toSide);
     },
-    [onSpread, spread]
+    [held, onShut, onClose]
   );
 
-  /** Turn to a page. Spread mode turns a whole leaf; single mode turns one page. */
-  const turnTo = useCallback(
-    (toSpread, toSide = 0) => {
-      if (flip) {
+  /** Where a turn ends: -1 is the front cover, N the back cover, anything between a page. */
+  const land = useCallback(
+    (to) => {
+      if (to === -1) return setShut('front');
+      if (to === N) return setShut('back');
+      const s = Math.floor(to / 2);
+      if (shut) setShut(false);
+      // Opening always reports the spread, so the URL gets its chapter back.
+      if (s !== spread || shut) {
+        lastSpread.current = s;
+        onSpread(s);
+      }
+      setSide(parity(to));
+    },
+    [N, shut, spread, setShut, onSpread]
+  );
+
+  /** Turn to a position. Spread mode turns a whole leaf; single mode turns one page. */
+  const turn = useCallback(
+    (to) => {
+      // A turn asked for while one runs finishes that one at once; turns never queue or overlap.
+      if (busy.current) {
         anim.current?.finish();
         return;
       }
-      toSpread = Math.max(0, Math.min(nSpreads - 1, toSpread));
       const single = isSingle();
-      if (!single) toSide = 0;
-      const from = single ? pageIndex : spread * 2;
-      const to = toSpread * 2 + toSide;
-      if (to === from || (!single && toSpread === spread)) return;
-      const f = { kind: single ? 'single' : 'spread', dir: to > from ? 1 : -1, fromSpread: spread, fromSide: side, toSpread, toSide, from, to };
-      if (prefersReducedMotion() || typeof Element === 'undefined' || !('animate' in Element.prototype)) {
-        commit(f);
-        return;
-      }
-      setFlip(f);
+      const from = shut === 'front' ? -1 : shut === 'back' ? N : single ? spread * 2 + side : spread * 2;
+      to = Math.max(cover ? -1 : 0, Math.min(backCover ? N : N - 1, to));
+      if (!single && to >= 0 && to < N) to -= to % 2;
+      if (to === from || (from === -1 && to === N) || (from === N && to === -1)) return;
+      setTocOpen(false);
+      if (!canAnimate()) return land(to);
+      const kind = single ? 'single' : from === -1 || to === -1 ? 'cover' : from === N || to === N ? 'back-cover' : 'spread';
+      busy.current = true;
+      setFlip({ kind, dir: to > from ? 1 : -1, from, to });
     },
-    [flip, nSpreads, pageIndex, spread, side, commit]
+    [shut, N, spread, side, cover, backCover, land]
   );
 
-  const next = useCallback(() => {
-    if (isSingle() && side === 0 && spread * 2 + 1 < pages.length) turnTo(spread, 1);
-    else turnTo(spread + 1, 0);
-  }, [side, spread, pages.length, turnTo]);
-  const prev = useCallback(() => {
-    if (isSingle()) {
-      if (side === 1) turnTo(spread, 0);
-      else if (spread > 0) turnTo(spread - 1, 1);
-    } else turnTo(spread - 1, 0);
-  }, [side, spread, turnTo]);
+  // Positions one step on: one page in single mode, one spread (or a cover) in spread mode.
+  const step = useCallback(
+    (d) => {
+      if (busy.current) return turn(0);
+      if (isSingle()) {
+        const p = shut === 'front' ? -1 : shut === 'back' ? N : spread * 2 + side;
+        return turn(p + d);
+      }
+      const s = (shut === 'front' ? -1 : shut === 'back' ? nSpreads : spread) + d;
+      turn(s < 0 ? -1 : s >= nSpreads ? N : s * 2);
+    },
+    [turn, shut, N, nSpreads, spread, side]
+  );
+  const next = useCallback(() => step(1), [step]);
+  const prev = useCallback(() => step(-1), [step]);
   const go = useCallback((id) => {
     const i = chapters.findIndex((c) => c.id === id);
-    if (i >= 0) turnTo(i, 0);
-  }, [chapters, turnTo]);
+    if (i >= 0) turn(i * 2);
+  }, [chapters, turn]);
 
-  // The cover opens once, when a book with a cover first appears.
+  /** The cover button and the mouse wheel: they ask again and again for one gesture, so a turn under way wins. */
+  const openCover = useCallback(() => {
+    if (!busy.current) turn(0);
+  }, [turn]);
+  const turnRef = useRef(turn);
+  turnRef.current = turn;
+
+  /** Close the phone contents panel and hand focus back to the ribbon. */
+  const closeToc = useCallback(() => {
+    setTocOpen(false);
+    ribbon.current?.focus({ preventScroll: true });
+  }, []);
+
+  // An entry's cover opens once, by itself, when the book first appears.
   useEffect(() => {
-    if (!opening) return;
-    if (prefersReducedMotion()) {
-      setOpening(false);
+    if (held || !cover) return;
+    if (!canAnimate()) {
+      setOwnShut(false);
       return;
     }
-    const t = setTimeout(() => setFlip({ kind: isSingle() ? 'open-single' : 'open', dir: 1, toSpread: 0, toSide: 0 }), 260);
+    const t = setTimeout(() => turnRef.current(0), 260);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Run the turn.
   useIso(() => {
     if (!flip || !leaf.current) return;
-    const single = flip.kind === 'single' || flip.kind === 'open-single';
+    const single = flip.kind === 'single';
     const forward = flip.dir > 0;
     let a, b;
-    if (single) [a, b] = forward ? [0, -180] : [-180, 0];
-    else [a, b] = forward ? [0, -180] : [0, 180];
-    const duration = single ? 460 : 720;
+    if (flip.kind === 'spread') [a, b] = forward ? [0, -180] : [0, 180];
+    else [a, b] = forward ? [0, -180] : [-180, 0];
+    const covers = flip.kind === 'cover' || flip.kind === 'back-cover';
+    const duration = single ? 460 : covers ? (held ? 640 : 520) : 720;
     const easing = 'cubic-bezier(0.645, 0.045, 0.355, 1)';
-    const k = leaf.current.animate([{ transform: `rotateY(${a}deg)` }, { transform: `rotateY(${b}deg)` }], { duration, easing, fill: 'forwards' });
-    const shades = [shadeA.current, shadeB.current].filter(Boolean).map((el) =>
-      el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.5 }, { opacity: 0 }], { duration, easing })
-    );
+    let k, extra;
+    if (single) {
+      // One page hinged a few pixels from the screen's left edge: past edge-on it is off screen, so the page lifts and
+      // sweeps left, fading over the last part of the arc it can be seen in and gone by edge-on. A back turn plays the
+      // same frames in reverse.
+      const timing = { duration, easing, fill: 'both', direction: forward ? 'normal' : 'reverse' };
+      k = leaf.current.animate(
+        [
+          { offset: 0, transform: 'translateX(0) rotateY(0deg)' },
+          { offset: 0.78, transform: 'translateX(-3%) rotateY(-68deg)' },
+          { offset: 0.95, transform: 'translateX(-4%) rotateY(-90deg)' },
+          { offset: 1, transform: 'translateX(-5%) rotateY(-180deg)' },
+        ],
+        timing
+      );
+      // opacity on the faces, not the leaf: opacity on the leaf would flatten its 3D
+      const faces = [...leaf.current.querySelectorAll('.face')].map((el) =>
+        el.animate([{ opacity: 1 }, { opacity: 1, offset: 0.78 }, { opacity: 0, offset: 0.95 }, { opacity: 0 }], timing)
+      );
+      const shades = [shadeA.current].filter(Boolean).map((el) => el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.95 }, { opacity: 1 }], timing));
+      extra = [...faces, ...shades];
+    } else {
+      k = leaf.current.animate([{ transform: `rotateY(${a}deg)` }, { transform: `rotateY(${b}deg)` }], { duration, easing, fill: 'forwards' });
+      extra = [shadeA.current, shadeB.current].filter(Boolean).map((el) =>
+        el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.5 }, { opacity: 0 }], { duration, easing })
+      );
+    }
+    // The main notebook sits centred while shut on either cover: the book slides with the cover as it turns.
+    if (covers && held) {
+      const shutAt = flip.kind === 'cover' ? 'translateX(-25%)' : 'translateX(25%)';
+      const [p, q] = (flip.kind === 'cover') === forward ? [shutAt, 'none'] : ['none', shutAt];
+      extra.push(bookEl.current.animate([{ transform: p }, { transform: q }], { duration, easing, fill: 'forwards' }));
+    }
     anim.current = k;
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
-      const kind = flip.kind.startsWith('open') ? 'open' : flip.kind;
-      commit({ ...flip, kind });
+      land(flip.to);
+      setSettling(true);
     };
     k.onfinish = finish;
     k.oncancel = finish;
-    return () => shades.forEach((s) => s.cancel());
+    return () => extra.forEach((s) => s.cancel());
   }, [flip]);
+
+  // One painted frame with the new pages under the finished leaf, then the leaf goes: never a frame with neither.
+  useIso(() => {
+    if (!settling) return;
+    let r2;
+    const r1 = requestAnimationFrame(() => {
+      r2 = requestAnimationFrame(() => {
+        busy.current = false;
+        setFlip(null);
+        setSettling(false);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+    };
+  }, [settling]);
 
   // Arrow keys, when this book is the one in front.
   useEffect(() => {
@@ -140,6 +228,14 @@ export default function Book({ pages, chapters, spread, onSpread, cover, variant
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
       const t = e.target;
       if (t && t.closest && t.closest('input, textarea, select, [role="tablist"], [contenteditable="true"]')) return;
+      // The panel exists only on phones; if the screen grew past that while it was open, keys turn pages again.
+      if (tocOpen && panel.current?.getClientRects().length) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeToc();
+        }
+        return;
+      }
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
         next();
@@ -151,8 +247,19 @@ export default function Book({ pages, chapters, spread, onSpread, cover, variant
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [active, next, prev, onClose]);
+    // A shut front cover also opens to the mouse wheel.
+    const wheel = shut === 'front';
+    if (wheel) window.addEventListener('wheel', openCover, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (wheel) window.removeEventListener('wheel', openCover);
+    };
+  }, [active, next, prev, onClose, shut, openCover, tocOpen, closeToc]);
+
+  // The contents panel takes focus as it opens; the panel focuses its first link.
+  useEffect(() => {
+    if (tocOpen) panel.current?.querySelector('a, button')?.focus({ preventScroll: true });
+  }, [tocOpen]);
 
   // Swipe on touch screens.
   const swipe = useRef(null);
@@ -167,112 +274,212 @@ export default function Book({ pages, chapters, spread, onSpread, cover, variant
     if (!s) return;
     const dx = e.clientX - s.x;
     const dy = e.clientY - s.y;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) (dx < 0 ? next : prev)();
+    if (Math.abs(dx) <= 50 || Math.abs(dx) <= Math.abs(dy) * 1.4) return;
+    // The shut front cover opens to a swipe either way.
+    if (shut === 'front' && !busy.current) turn(0);
+    else (dx < 0 ? next : prev)();
+  };
+  // The browser took the gesture over (a vertical scroll inside the page): not a swipe.
+  const onPointerCancel = () => {
+    swipe.current = null;
   };
 
   // ---- what is drawn where ----
-  const renderPage = (i, sideClass, { blank = false } = {}) => {
-    if (i === -1) return <CoverFace render={cover} sideClass={sideClass} title={title} />;
-    if (blank || i < 0 || i >= pages.length) return <div className={`page ${sideClass} blank`} />;
+  // i is a page number, or 'front' / 'back' for the outside of a cover.
+  const renderPage = (i, sideClass, hidden) => {
+    if (i === 'front') return <CoverFace render={cover} sideClass={sideClass} />;
+    if (i === 'back') return <CoverFace render={backCover} sideClass={sideClass} back />;
+    if (i == null || i < 0 || i >= N) return <div className={`page ${sideClass} blank${hidden ? ' pre' : ''}`} />;
     const p = pages[i];
+    // Derived from the page itself, not the current spread, so a page on a turning leaf already shows what it will show once the turn lands.
+    const s = Math.floor(i / 2);
+    const isLeft = i % 2 === 0;
     return (
-      <div className={`page ${sideClass}`} aria-label={`Page ${i + 1}`}>
+      <div className={`page ${sideClass}${isLeft ? ' with-margin' : ' with-theme'}${hidden ? ' pre' : ''}`} aria-label={`Page ${i + 1}`}>
+        {isLeft && <Margin chapters={chapters} current={s} onGo={(k) => turn(k * 2)} onClose={onClose} />}
         <div className="page-head" aria-hidden="true">
           <span>{p.head}</span>
         </div>
         <div className="page-body">{p.render()}</div>
-        <div className="page-foot" aria-hidden="true">{i + 1}</div>
+        <div className="page-foot" aria-hidden="true">
+          {/* A spread names its chapter on the left page; one page at a time, on the right page. */}
+          {chapters[s] && (
+            <span className="foot-label">
+              <span className="foot-ch">{chapters[s].label}</span>
+              <span className="num">{s + 1} / {nSpreads}</span>
+            </span>
+          )}
+          <span className="pno">{i + 1}</span>
+          {/* Phones only: chapter and position on one line, between the dog-ears. */}
+          {chapters[s] && <span className="foot-phone">{chapters[s].label} · {i + 1} / {N}</span>}
+        </div>
       </div>
     );
   };
 
-  let base;
+  // The pages underneath, keyed by page number so a page keeps its state when it moves from "about to show" to "shown".
+  // A page that first appears on the leaf is mounted here too, hidden and already drawn (static), so it never draws twice.
+  const slots = [[], []];
+  const put = (i, hidden = false, still = false) => slots[parity(i === 'back' ? N : i)].push({ i, hidden, still });
+  // Positions -1 and N are the covers.
+  const at = (p) => (p === -1 ? 'front' : p === N ? 'back' : p);
+  const live = flip && !settling ? flip : null;
   let leafEl = null;
-  const showSide = flip && flip.kind === 'single' ? flip.toSide : side;
-  if (opening && !flip) {
-    // Closed: just the cover, on the right.
-    base = [renderPage(-2, 'left', { blank: true }), renderPage(-1, 'right')];
-  } else if (flip && (flip.kind === 'open' || flip.kind === 'open-single')) {
-    const single = flip.kind === 'open-single';
-    base = [renderPage(0, 'left'), renderPage(1, 'right')];
-    if (!single) base[0] = <div key="l" className="page left blank" />;
-    leafEl = (
-      <div className={`leaf ${single ? 'leaf-single' : 'leaf-right'}`} ref={leaf}>
-        <div className="face front">{renderPage(-1, single ? 'left' : 'right')}<span className="shade" ref={shadeA} /></div>
-        <div className="face back">{single ? <div className="page left blank" /> : renderPage(0, 'left')}<span className="shade" ref={shadeB} /></div>
-      </div>
-    );
-  } else if (flip && flip.kind === 'spread') {
+  let baseSide = side;
+  const face = (which, i, sideClass) => (
+    <div className={`face ${which}`}>
+      {renderPage(i, sideClass)}
+      <span className="shade" ref={which === 'front' ? shadeA : shadeB} />
+    </div>
+  );
+  if (flip) {
     const f = flip;
-    const L = (s) => s * 2;
-    if (f.dir > 0) {
-      base = [renderPage(L(f.fromSpread), 'left'), renderPage(L(f.toSpread) + 1, 'right')];
+    if (f.kind === 'single') {
+      // Forward: the current page lifts away to reveal the next. Back: the previous page comes down over the current one.
+      const under = f.dir > 0 ? f.to : f.from;
+      const over = f.dir > 0 ? f.from : f.to;
+      leafEl = (
+        <div className="leaf leaf-single" ref={leaf} style={{ transform: f.dir > 0 ? 'none' : 'rotateY(-180deg)' }}>
+          {face('front', at(over), 'left')}
+          {face('back', null, 'left')}
+        </div>
+      );
+      if (live) {
+        put(at(under));
+        if (f.dir < 0 && f.to >= 0) put(f.to, true, true);
+        baseSide = parity(under);
+      }
+    } else if (f.kind === 'spread') {
+      const [l, r] = f.dir > 0 ? [f.from + 1, f.to] : [f.from, f.to + 1];
+      leafEl = (
+        <div className={`leaf ${f.dir > 0 ? 'leaf-right' : 'leaf-left'}`} ref={leaf}>
+          {face('front', l, f.dir > 0 ? 'right' : 'left')}
+          {face('back', r, f.dir > 0 ? 'left' : 'right')}
+        </div>
+      );
+      if (live) {
+        if (f.dir > 0) {
+          put(f.from);
+          put(f.to, true, true);
+          put(f.to + 1);
+        } else {
+          put(f.to);
+          put(f.from + 1);
+          put(f.to + 1, true, true);
+        }
+      }
+    } else {
+      // A cover turns on the right half: the front cover over the first page, or the last right page onto the back cover.
+      const front = f.kind === 'cover';
+      const open = front ? (f.dir > 0 ? f.to : f.from) : f.dir > 0 ? f.from : f.to;
+      const opening = front === f.dir > 0;
       leafEl = (
         <div className="leaf leaf-right" ref={leaf}>
-          <div className="face front">{renderPage(L(f.fromSpread) + 1, 'right')}<span className="shade" ref={shadeA} /></div>
-          <div className="face back">{renderPage(L(f.toSpread), 'left')}<span className="shade" ref={shadeB} /></div>
+          {face('front', front ? 'front' : open + 1, 'right')}
+          {face('back', front ? open : 'back', 'left')}
         </div>
       );
-    } else {
-      base = [renderPage(L(f.toSpread), 'left'), renderPage(L(f.fromSpread) + 1, 'right')];
-      leafEl = (
-        <div className="leaf leaf-left" ref={leaf}>
-          <div className="face front">{renderPage(L(f.fromSpread), 'left')}<span className="shade" ref={shadeA} /></div>
-          <div className="face back">{renderPage(L(f.toSpread) + 1, 'right')}<span className="shade" ref={shadeB} /></div>
-        </div>
-      );
+      if (live) {
+        // The half the cover has left shows the bare board; the page that comes with the turning leaf waits there, hidden.
+        put(open, front, front && opening);
+        put(open + 1, !front, !front && opening);
+      }
     }
-  } else if (flip && flip.kind === 'single') {
-    const f = flip;
-    // Forward: the current page lifts away to reveal the next. Back: the previous page comes down over the current one.
-    const under = f.dir > 0 ? f.to : f.from;
-    const over = f.dir > 0 ? f.from : f.to;
-    const u = renderPage(under, under % 2 ? 'right' : 'left');
-    base = under % 2 ? [<div key="l" className="page left blank" />, u] : [u, <div key="r" className="page right blank" />];
-    leafEl = (
-      <div className="leaf leaf-single" ref={leaf} style={{ transform: f.dir > 0 ? 'none' : 'rotateY(-180deg)' }}>
-        <div className="face front">{renderPage(over, 'left')}<span className="shade" ref={shadeA} /></div>
-        <div className="face back"><div className="page left blank" /><span className="shade" ref={shadeB} /></div>
-      </div>
-    );
-  } else {
-    base = [renderPage(spread * 2, 'left'), renderPage(spread * 2 + 1, 'right')];
   }
-  const baseSide = flip && flip.kind === 'single' ? (flip.dir > 0 ? flip.to : flip.from) % 2 : showSide;
+  if (!live) {
+    put(spread * 2);
+    put(spread * 2 + 1);
+  }
 
-  const ch = chapters[flip && flip.toSpread != null ? flip.toSpread : spread];
-  const atStart = spread === 0 && side === 0;
-  const atEnd = spread === nSpreads - 1 && (side === 1 || spread * 2 + 1 >= pages.length);
+  const coverShut = !!shut && !live;
+  const pos = live ? live.to : shut === 'front' ? -1 : shut === 'back' ? N : spread * 2 + side;
+  const shownSpread = Math.max(0, Math.min(nSpreads - 1, Math.floor(pos / 2)));
+  const ch = chapters[shownSpread];
+  const turning = live && (live.kind === 'cover' || live.kind === 'back-cover') ? ` turning-${live.kind === 'cover' ? 'front' : 'back'}` : '';
+  // The covers carry no page chrome: it fades while a cover turns and while the book is shut.
+  const covering = live && [-1, N].some((p) => p === live.from || p === live.to);
 
   return (
     <BookContext.Provider value={{ go, active }}>
-      <div className={`book-wrap ${variant}`}>
+      <div className={`book-wrap ${variant}${coverShut ? ' shut' : ''}`}>
         <div
-          className={`book${opening && !flip ? ' closed' : ''}${flip && flip.kind === 'open' ? ' opening' : ''}`}
+          ref={bookEl}
+          className={`book${coverShut ? ' closed' : ''}${coverShut && shut === 'back' ? ' at-back' : ''}${turning}${covering ? ' covering' : ''}`}
           data-side={baseSide ? 'right' : 'left'}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           role="region"
           aria-roledescription="book"
           aria-label={title}
         >
           <div className="spine" aria-hidden="true" />
           <div className="pages">
-            {base.map((el, i) => (
-              <div key={i} className="slot">{el}</div>
+            {slots.map((list, k) => (
+              <div key={k} className="slot">
+                {list.map(({ i, hidden, still }) => (
+                  <StaticContext.Provider key={i} value={still}>
+                    {renderPage(i, k ? 'right' : 'left', hidden)}
+                  </StaticContext.Provider>
+                ))}
+              </div>
             ))}
           </div>
           {leafEl && <StaticContext.Provider value={true}><div className="leaves" aria-hidden="true">{leafEl}</div></StaticContext.Provider>}
-          {!(opening && !flip) && (
+          {coverShut && (
             <>
-              <button type="button" className="corner prev" onClick={prev} disabled={atStart} aria-label="Previous page">
-                <span aria-hidden="true">‹</span>
+              <div className="cover-layer front">
+                <CoverFace render={cover} sideClass="right" open={openCover} />
+              </div>
+              {backCover && (
+                <div className="cover-layer back">
+                  <CoverFace render={backCover} sideClass="left" back toStart={() => turn(0)} />
+                </div>
+              )}
+            </>
+          )}
+          {(!coverShut || held) && (
+            <>
+              <button type="button" className="corner prev" onClick={prev} disabled={shut === 'front'} aria-label={shut === 'back' ? 'Open the back cover' : 'Previous page'}>
+                <span className="ear" aria-hidden="true">‹</span>
+                <span className="tip" aria-hidden="true">{shut === 'back' ? 'Open' : 'Previous page'}</span>
               </button>
-              <button type="button" className="corner next" onClick={next} disabled={atEnd} aria-label="Next page">
-                <span aria-hidden="true">›</span>
+              <button type="button" className="corner next" onClick={next} disabled={shut === 'back'} aria-label="Next page">
+                <span className="ear" aria-hidden="true">›</span>
+                <span className="tip" aria-hidden="true">Next page</span>
               </button>
             </>
           )}
+          {/* The book's own chrome, above the pages and the turning leaf, so it stays still while the paper turns under it. */}
+          <div className="chrome">
+            <div className="book-theme">
+              <ThemeToggle />
+            </div>
+            <button
+              type="button"
+              className="ribbon"
+              ref={ribbon}
+              aria-expanded={tocOpen}
+              aria-controls={`${variant}-contents`}
+              onClick={() => (tocOpen ? closeToc() : setTocOpen(true))}
+            >
+              Contents
+            </button>
+            <div className={`toc-panel${tocOpen ? ' open' : ''}`} id={`${variant}-contents`}>
+              <div className="toc-scrim" onClick={closeToc} />
+              <div className="toc-sheet" ref={panel}>
+                <Margin
+                  chapters={chapters}
+                  current={shownSpread}
+                  onGo={(k) => {
+                    closeToc();
+                    turn(k * 2);
+                  }}
+                  onClose={onClose}
+                />
+              </div>
+            </div>
+          </div>
           {onClose && (
             <button type="button" className="close" onClick={onClose} aria-label="Close this entry and return to the notebook">
               <span aria-hidden="true">×</span>
@@ -280,51 +487,74 @@ export default function Book({ pages, chapters, spread, onSpread, cover, variant
           )}
         </div>
 
-        {tabs && chapters.length > 1 && (
-          <nav className="book-tabs" aria-label="Chapters">
-            {chapters.map((c, i) => (
-              <a
-                key={c.id}
-                href={c.href || `#${c.id}`}
-                className="btab"
-                aria-current={i === spread ? 'true' : undefined}
-                onClick={(e) => {
-                  if (c.href) return;
-                  e.preventDefault();
-                  turnTo(i, 0);
-                }}
-              >
-                {c.label}
-              </a>
-            ))}
-          </nav>
-        )}
-
+        {/* Phones and tall screens only: there is no room for the margin contents (or its theme toggle) there. */}
         <div className="book-bar">
-          <button type="button" className="barbtn" onClick={prev} disabled={atStart} aria-label="Previous page">‹ <span className="bt">Back</span></button>
-          {variant === 'main' && (
-            <label className="toc">
-              <span className="sr">Go to chapter</span>
-              <select value={flip?.toSpread ?? spread} onChange={(e) => turnTo(Number(e.target.value), 0)}>
-                {chapters.map((c, i) => (
-                  <option key={c.id} value={i}>{c.label}</option>
-                ))}
-              </select>
-            </label>
-          )}
-          <span className="status" aria-live="polite">
-            <span className="ch">{ch?.label}</span>
-            <span className="pos num">
-              {variant === 'main' ? `${(flip?.toSpread ?? spread) + 1} / ${nSpreads}` : `Spread ${(flip?.toSpread ?? spread) + 1} of ${nSpreads}`}
-            </span>
-          </span>
-          <button type="button" className="barbtn" onClick={next} disabled={atEnd} aria-label="Next page"><span className="bt">Turn</span> ›</button>
+          <button type="button" className="barbtn bar-turn" onClick={prev} disabled={shut === 'front'} aria-label="Previous page">‹ <span className="bt">Back</span></button>
+          <label className="toc">
+            <span className="sr">Go to chapter</span>
+            <select
+              value={held && shut ? shut : shownSpread}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'close') onClose();
+                else turn(v === 'front' ? -1 : v === 'back' ? N : Number(v) * 2);
+              }}
+            >
+              {held && cover && <option value="front">Cover</option>}
+              {chapters.map((c, i) => (
+                <option key={c.id} value={i}>{c.label}</option>
+              ))}
+              {held && backCover && <option value="back">Back cover</option>}
+              {/* the margin's "Back to the notebook" has no room on one-page screens */}
+              {onClose && <option value="close">← Back to the notebook</option>}
+            </select>
+          </label>
+          <button type="button" className="barbtn bar-turn" onClick={next} disabled={shut === 'back'} aria-label="Next page"><span className="bt">Turn</span> ›</button>
+          <ThemeToggle />
         </div>
+        <span className="sr" aria-live="polite">{shut === 'front' ? 'Cover' : shut === 'back' ? 'Back cover' : `${ch?.label}, ${shownSpread + 1} of ${nSpreads}`}</span>
       </div>
     </BookContext.Provider>
   );
 }
 
-function CoverFace({ render, sideClass }) {
-  return <div className={`page ${sideClass} cover`}>{render && render()}</div>;
+/** The left page's outer margin: resume and the book's contents with the current chapter underlined in red pen. */
+function Margin({ chapters, current, onGo, onClose }) {
+  return (
+    <div className="margin">
+      <div className="margin-top">
+        <a className="mlink" href={LINKS.resume} target="_blank" rel="noopener">Resume</a>
+      </div>
+      <nav aria-label="Contents">
+        <span className="lbl">Contents</span>
+        <ol>
+          {chapters.map((c, k) => (
+            <li key={c.id}>
+              <a
+                href={c.href || `#${c.id}`}
+                aria-current={k === current ? 'true' : undefined}
+                onClick={(e) => {
+                  if (c.href) return;
+                  e.preventDefault();
+                  onGo(k);
+                }}
+              >
+                {/* Drawn already, so the underline doesn't redraw when the turning leaf hands over to the page beneath. */}
+                {k === current ? <StaticContext.Provider value={true}><Mark kind="under">{c.label}</Mark></StaticContext.Provider> : c.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      {onClose && (
+        <button type="button" className="mback" onClick={onClose}>
+          <span aria-hidden="true">← </span>Back to the notebook
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CoverFace({ render, sideClass, back, open, toStart }) {
+  return <div className={`page ${sideClass} cover${back ? ' back-cover' : ''}`}>{render && render({ open, toStart })}</div>;
 }
