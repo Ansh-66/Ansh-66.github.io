@@ -305,7 +305,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
           )}
           <span className="pno">{i + 1}</span>
           {/* Phones only: chapter and position on one line, between the dog-ears. */}
-          {chapters[s] && <span className="foot-phone">{chapters[s].label} · {i + 1} / {N}</span>}
+          {chapters[s] && <span className="foot-phone">{chapters[s].label} · <span className="nw">{i + 1} / {N}</span></span>}
         </div>
       </div>
     );
