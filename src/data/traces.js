@@ -5,8 +5,8 @@
 // outcomes are as the README gives them ("→ ok", or held by the confirmation gate). The only change: guests' phone
 // numbers are shown as [withheld], since the site carries no phone numbers.
 // TRACE_SOURCE_SHORT is shown where the console is too narrow for the full line (see .console-note in styles.css).
-export const TRACE_SOURCE = 'Logged run · gpt-oss-20b · 20 Oct 2026';
-export const TRACE_SOURCE_SHORT = 'Logged run · 20 Oct 2026';
+export const TRACE_SOURCE = 'Logged run · gpt-oss-20b';
+export const TRACE_SOURCE_SHORT = 'Logged run';
 
 const HELD = 'held until the guest confirms';
 
