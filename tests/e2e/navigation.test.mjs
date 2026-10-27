@@ -20,7 +20,7 @@ const done = async (page) => {
   await page.context().close();
 };
 
-test('the front cover opens by click, Enter, arrow key and mouse wheel', async () => {
+test('the front cover opens by click, Enter, arrow key and a sideways swipe', async () => {
   for (const how of ['click', 'enter', 'key', 'wheel']) {
     const page = await open(browser, '/');
     await page.waitForTimeout(400);
@@ -33,7 +33,12 @@ test('the front cover opens by click, Enter, arrow key and mouse wheel', async (
     if (how === 'key') await page.keyboard.press('ArrowRight');
     if (how === 'wheel') {
       await page.mouse.move(700, 450);
+      // up and down never turn a page or open the cover
       for (let i = 0; i < 10; i++) await page.mouse.wheel(0, 40);
+      await settle(page, 300);
+      assert.equal((await state(page)).shut, 'front', 'a vertical wheel leaves the cover shut');
+      await page.waitForTimeout(200);
+      for (let i = 0; i < 10; i++) await page.mouse.wheel(40, 0);
     }
     await settle(page, 300);
     const s = await state(page);

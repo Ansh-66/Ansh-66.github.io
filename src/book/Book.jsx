@@ -268,7 +268,8 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
         onClose();
       }
     };
-    // The mouse wheel and the trackpad turn pages too, one page per gesture. Events arrive in streams, and a pause of
+    // A sideways trackpad swipe (or a sideways wheel) turns pages too, one page per gesture. Up and down never turn a
+    // page: they are left to scroll the page's text, as a reader expects. Events arrive in streams, and a pause of
     // over 140ms starts a new gesture. A gesture turns at most one page, and only if it began after the last turn
     // ended, so trackpad momentum never turns a second page and nothing queues during a turn. A clearly harder push in
     // the middle of a long stream counts as a new gesture, for wheels that never pause.
@@ -277,7 +278,8 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       if (tocOpen && panel.current?.getClientRects().length) return;
       const g = gesture.current;
       const sideways = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-      let d = sideways ? e.deltaX : e.deltaY;
+      if (!sideways) return;
+      let d = e.deltaX;
       if (e.deltaMode === 1) d *= 16;
       else if (e.deltaMode === 2) d *= window.innerHeight;
       if (!d) return;
@@ -306,7 +308,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
       if (!fresh && !push) return;
       g.used = true;
       g.speeds = [];
-      // A shut front cover opens to the wheel either way.
+      // A shut front cover opens to a swipe either way.
       if (shut === 'front') openCover();
       else (dir > 0 ? next : prev)();
     };

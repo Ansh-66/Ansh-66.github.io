@@ -151,7 +151,7 @@ export const mainPages = [
         <div className="howto">
           <span className="lbl">How to read this notebook</span>
           <ul className="by-mouse">
-            <li><b>Turn a page:</b> scroll, swipe with two fingers, press ← →, or click a folded corner.</li>
+            <li><b>Turn a page:</b> swipe sideways with two fingers, press ← →, or click a folded corner.</li>
             <li><b>Jump to a chapter:</b> pick it from Contents.</li>
             <li><b>Read a project in full:</b> “Run the full entry” opens its case study; × or Esc brings you back to the same page.</li>
           </ul>
