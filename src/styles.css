@@ -393,6 +393,19 @@ main.behind .book-bar { visibility: hidden; }
 .stat .big { display: block; font-size: 3.2em; line-height: 1; letter-spacing: -0.03em; }
 .stat .what { display: block; margin-top: 0.35em; color: var(--ink-2); }
 .runrow, .endnav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6em 1em; margin-top: 0.3em; }
+/* Result pages in a spread: the page's text size follows its height, but on a page that is narrow for that size the
+   text wraps onto more lines than fits. Their text steps down a little there (never under 14px), and on shorter pages
+   the gaps and bars tighten, so the whole page shows without scrolling on laptop and desktop screens. */
+@media not ((max-width: 899px) or (max-aspect-ratio: 11/10) or (max-height: 500px)) {
+  .page-body:has(> .statpage) { font-size: max(14px, min(1em, 2.3cqi, 1.95cqh)); }
+  @container (max-height: 860px) {
+    .statpage { gap: 0.4em; }
+    .statpage > .pen { margin-bottom: 0.4em; }
+    .statpage > .fig { margin-top: 0.8em; margin-bottom: 0.3em; }
+    .statpage > ul.decisions { margin: 0.2em 0 0.5em; }
+    .statpage .bar .track { height: clamp(1.1em, 3.1cqh, 2.4em); }
+  }
+}
 .endnav { flex-direction: column; align-items: flex-start; margin-top: 1em; }
 .run {
   display: inline-flex; align-items: center; gap: 0.55em; min-height: 44px; padding: 0.6em 1.1em; border-radius: 8px; font-weight: 500;
