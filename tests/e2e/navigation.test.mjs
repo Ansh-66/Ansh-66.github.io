@@ -269,8 +269,10 @@ test('copy email: copies when allowed, selects the address when the clipboard is
 });
 
 test('the theme toggle switches and survives a reload; broken storage does not break the page', async () => {
-  const page = await open(browser, '/#intro', { ...still, colorScheme: 'light' });
+  // light by default, even on a system set to dark
+  const page = await open(browser, '/#intro', { ...still, colorScheme: 'dark' });
   await settle(page, 300);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--paper').trim().toUpperCase()), '#F5F8F0');
   await page.locator('.book-theme button').first().click();
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
   await page.reload();

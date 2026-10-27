@@ -44,7 +44,9 @@ test('axe: every spread of every book, light and dark, desktop and phone', { ski
     }
   };
   for (const [scheme, vp] of [['light', { width: 1440, height: 900 }], ['dark', { width: 1440, height: 900 }], ['light', { width: 390, height: 844 }]]) {
-    const opts = { reducedMotion: 'reduce', colorScheme: scheme, viewport: vp, bypassCSP: true, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) };
+    // light is the default whatever the system prefers, so the dark pass saves the toggle's choice first
+    const saved = scheme === 'dark' ? { storageState: { cookies: [], origins: [{ origin: BASE, localStorage: [{ name: 'theme', value: 'dark' }] }] } } : {};
+    const opts = { ...saved, reducedMotion: 'reduce', colorScheme: scheme, viewport: vp, bypassCSP: true, ...(vp.width < 500 ? { isMobile: true, hasTouch: true } : {}) };
     // the shut cover, as a first visit sees it
     const cover = await open(browser, '/', { ...opts, reducedMotion: 'no-preference' });
     await cover.waitForTimeout(600);

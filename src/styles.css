@@ -33,17 +33,7 @@
   --f-hand: 'Kalam', 'Segoe Print', 'Comic Sans MS', cursive;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --desk: #0B0F0D; --desk-2: #131915; --desk-ink: #E2E9E1;
-    --paper: #171D19; --paper-2: #1C231E; --grid: rgba(190, 225, 200, 0.05);
-    --ink: #E2E9E1; --ink-2: #A6B3A9; --rule: #2B352F;
-    --pen: #FF806E; --pen-soft: rgba(255, 128, 110, 0.38); --chip: #232C27;
-    --cover: #24382C; --cover-2: #162219; --console: #070A09; --console-2: #121815;
-    --good: #7CCB9B; --edge: #222A25; --cover-ink: #E8E4DA;
-    color-scheme: dark;
-  }
-}
+/* Light is the default for everyone; dark only when the visitor picks it with the toggle (saved in localStorage). */
 :root[data-theme='dark'] {
   --desk: #0B0F0D; --desk-2: #131915; --desk-ink: #E2E9E1;
   --paper: #171D19; --paper-2: #1C231E; --grid: rgba(190, 225, 200, 0.05);
@@ -427,7 +417,6 @@ main.behind .book-bar { visibility: hidden; }
 /* figures taped in */
 figure.fig { margin: 0.9em 0 0.5em; background: color-mix(in srgb, var(--paper) 80%, #ffffff); border: 1px solid var(--rule); border-radius: 5px; padding: 0.9em 0.9em 0.7em; position: relative; box-shadow: 0 8px 18px -16px rgba(0,0,0,.4); }
 :root[data-theme='dark'] figure.fig { background: color-mix(in srgb, var(--paper) 88%, #ffffff); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) figure.fig { background: color-mix(in srgb, var(--paper) 88%, #ffffff); } }
 figure.fig::before { content: ''; position: absolute; top: -0.65em; left: 1.4em; width: 4.4em; height: 1.3em; transform: rotate(-3deg); background: color-mix(in srgb, var(--pen) 10%, color-mix(in srgb, var(--paper) 70%, #c9c3a6)); opacity: 0.85; border-radius: 2px; }
 figcaption { font-size: 0.8em; color: var(--ink-2); margin-top: 0.6em; }
 figcaption b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); margin-right: 0.4em; }

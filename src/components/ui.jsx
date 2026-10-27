@@ -152,7 +152,7 @@ export function CopyEmail({ className = 'btn', target = 'email-text' }) {
 export function ThemeToggle() {
   const toggle = () => {
     const d = document.documentElement;
-    const current = d.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const current = d.getAttribute('data-theme') || 'light';
     const next = current === 'dark' ? 'light' : 'dark';
     d.setAttribute('data-theme', next);
     try {
