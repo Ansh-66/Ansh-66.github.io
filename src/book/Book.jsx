@@ -47,7 +47,7 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
   const held = !!onShut;
   const [ownShut, setOwnShut] = useState(cover ? 'front' : false);
   const shut = held ? shutProp : ownShut;
-  // Phones only: the contents, slid out from the bookmark ribbon.
+  // One page at a time (phones and tablets): the contents, slid out from the bookmark ribbon.
   const [tocOpen, setTocOpen] = useState(false);
   const ribbon = useRef(null);
   const panel = useRef(null);
@@ -575,31 +575,6 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
           )}
         </div>
 
-        {/* Phones and tall screens only: there is no room for the margin contents (or its theme toggle) there. */}
-        <div className="book-bar">
-          <button type="button" className="barbtn bar-turn" onClick={prev} disabled={shut === 'front'} aria-label="Previous page">‹ <span className="bt">Back</span></button>
-          <label className="toc">
-            <span className="sr">Go to chapter</span>
-            <select
-              value={held && shut ? shut : shownSpread}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === 'close') onClose();
-                else turn(v === 'front' ? -1 : v === 'back' ? N : Number(v) * 2);
-              }}
-            >
-              {held && cover && <option value="front">Cover</option>}
-              {chapters.map((c, i) => (
-                <option key={c.id} value={i}>{c.label}</option>
-              ))}
-              {held && backCover && <option value="back">Back cover</option>}
-              {/* the margin's "Back to the notebook" has no room on one-page screens */}
-              {onClose && <option value="close">← Back to the notebook</option>}
-            </select>
-          </label>
-          <button type="button" className="barbtn bar-turn" onClick={next} disabled={shut === 'back'} aria-label="Next page"><span className="bt">Turn</span> ›</button>
-          <ThemeToggle />
-        </div>
         <span className="sr" aria-live="polite">{shut === 'front' ? 'Cover' : shut === 'back' ? 'Back cover' : `${ch?.label}, ${shownSpread + 1} of ${nSpreads}`}</span>
       </div>
     </BookContext.Provider>

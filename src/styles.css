@@ -26,6 +26,9 @@
   --good: #2C6E4A;
   --edge: #E2E8DC;
   --cover-ink: #F2EFE6;
+  --band: #16211A;
+  /* a faint paper grain, one image per theme */
+  --grain: url('/paper-grain.svg');
 
   --f-display: 'Young Serif', 'Iowan Old Style', Georgia, serif;
   --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -41,6 +44,7 @@
   --pen: #FF806E; --pen-soft: rgba(255, 128, 110, 0.38); --chip: #232C27;
   --cover: #24382C; --cover-2: #162219; --console: #070A09; --console-2: #121815;
   --good: #7CCB9B; --edge: #222A25; --cover-ink: #E8E4DA;
+  --band: #0C120E; --grain: url('/paper-grain-dark.svg');
   color-scheme: dark;
 }
 
@@ -73,7 +77,6 @@ p { text-wrap: pretty; }
 .notice { margin: 10px 16px 0; font-size: 14px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 8px 14px; border-radius: 6px; }
 main { width: 100%; display: flex; flex: 1; min-height: 0; }
 main.behind { pointer-events: none; }
-main.behind .book-bar { visibility: hidden; }
 
 /* ---------- the book ---------- */
 .book-wrap {
@@ -122,8 +125,8 @@ main.behind .book-bar { visibility: hidden; }
 .page {
   position: absolute; inset: 0; overflow: hidden; color: var(--ink);
   background-color: var(--paper);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 1.6em 1.6em; background-position: -1px -1px;
+  background-image: var(--grain), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 180px 180px, 1.6em 1.6em, 1.6em 1.6em; background-position: 0 0, -1px -1px, -1px -1px;
   /* pages take the screen's shape, so text follows the page's height, capped by its width */
   font-size: clamp(14px, min(2.05cqh, 3.1cqi), 20px);
   display: flex; flex-direction: column;
@@ -134,7 +137,7 @@ main.behind .book-bar { visibility: hidden; }
 .page.with-margin { --mw: clamp(120px, 15cqi, 190px); --ml: calc(var(--mw) + 2.4cqi); --rule-x: var(--mw); }
 .page.left { border-radius: 6px 0 0 6px; box-shadow: inset -26px 0 30px -26px rgba(0, 0, 0, 0.28); }
 .page.right { border-radius: 0 6px 6px 0; box-shadow: inset 26px 0 30px -26px rgba(0, 0, 0, 0.28); }
-.page.blank { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); }
+.page.blank { background-image: var(--grain), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); }
 /* a page waiting under the turning leaf for the turn to land, or the half a turning cover has left bare */
 .page.pre { visibility: hidden; }
 /* the pages under a shut cover stay out of sight and out of the tab order until it opens */
@@ -208,6 +211,14 @@ main.behind .book-bar { visibility: hidden; }
 .cover-arrow { display: inline-block; font-size: 1.4em; animation: nudge 1.4s ease-in-out infinite; }
 /* the back cover, seen from outside: its spine on the right */
 .page.cover.back-cover { border-radius: 8px 0 0 8px; box-shadow: inset -18px 0 24px -18px rgba(0,0,0,0.5); }
+/* The elastic band that holds the notebook shut, down the front cover near its opening edge. It is part of the cover,
+   so it turns with it; while the book lies shut it also runs over the board's edge above and below the cover. */
+.main .page.cover:not(.back-cover)::after, .main .cover-layer.front::after {
+  content: ''; position: absolute; top: 0; bottom: 0; right: 7%; width: max(10px, 1.6cqi); pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 30% 70%, rgba(0, 0, 0, 0.3)), var(--band);
+  box-shadow: -2px 0 4px -1px rgba(0, 0, 0, 0.35), 2px 0 4px -1px rgba(0, 0, 0, 0.25);
+}
+.main .cover-layer.front::after { top: -14px; bottom: -16px; z-index: -1; }
 .back-art { gap: 0.9em; }
 .back-art .cover-title { font-size: 2.1em; }
 .cover-email { font-family: var(--f-mono); font-size: max(14px, 0.85em); letter-spacing: 0.02em; color: var(--cover-ink); }
@@ -315,24 +326,11 @@ main.behind .book-bar { visibility: hidden; }
   background: var(--desk-ink); color: var(--desk); font-size: 24px; line-height: 1; box-shadow: 0 6px 16px -6px rgba(0,0,0,0.5);
 }
 
-/* ---------- bottom bar: single-page mode only ---------- */
-.book-bar { display: none; flex: none; align-items: center; justify-content: center; gap: 14px; width: 100%; }
-.barbtn { min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--desk-ink) 18%, transparent); background: transparent; cursor: pointer; font-size: 14.5px; display: inline-flex; align-items: center; gap: 6px; }
-.barbtn:hover:not(:disabled) { border-color: var(--desk-ink); }
-.barbtn:disabled { opacity: 0.35; cursor: default; }
-
-.toc { display: inline-block; position: relative; }
-.toc select { appearance: none; -webkit-appearance: none; min-height: 44px; padding: 0 30px 0 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--desk-ink) 18%, transparent); background: transparent; color: inherit; font: inherit; font-size: 14px; max-width: 46vw; }
-.toc::after { content: '▾'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 12px; }
-.toc option { color: #1A1F1B; background: #fff; }
-
 /* ---------- entry book overlay ---------- */
 .overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; animation: rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; overflow: hidden; }
 .overlay.leaving { animation: sink 0.24s ease-in both; }
 .overlay-dim { position: fixed; inset: 0; background: color-mix(in srgb, var(--desk) 45%, #000 55%); opacity: 0.88; }
 .overlay .book-wrap { --gap: 0px; flex: none; width: 92vw; height: 92vh; height: 92dvh; }
-.overlay .book-bar { color: #F2EFE6; }
-.overlay .barbtn, .overlay .book-bar .iconbtn { border-color: rgba(242, 239, 230, 0.35); }
 .tone-oxblood { --tone: #6B2A24; }
 .tone-navy { --tone: #243A5E; }
 .tone-green { --tone: #2C4F3A; }
@@ -606,27 +604,44 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 /* ---------- single-page mode: phones and narrow or tall screens ---------- */
 /* Must match SINGLE_MQ in Book.jsx. */
 @media (max-width: 899px), (max-aspect-ratio: 11/10), (max-height: 500px) {
-  .book-wrap {
-    --gap: 10px; gap: 18px;
-    padding: calc(var(--gap) + 8px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + 8px)
-      max(8px, env(safe-area-inset-bottom, 0px)) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 10px);
+  /* The board, bound on the left: a darker strip where it folds round the spine, and its cloth texture. */
+  .book::before {
+    inset: -8px -8px -10px -10px; border-radius: 10px;
+    background-image: linear-gradient(90deg, var(--cover-2) 0 4%, transparent 11%), repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 5px);
   }
-  .overlay .book-wrap { --gap: 0px; }
-  .book-bar { display: flex; }
-  .book::before { inset: -8px -8px -10px -10px; border-radius: 10px; background-image: linear-gradient(90deg, var(--cover-2) 0 3%, transparent 8%); }
-  .book::after { inset: 2px -3px -5px 0; }
+  /* The block of pages under this one, its edges showing down the right side and along the bottom. */
+  .book::after {
+    inset: 2px -5px -7px 0; border-radius: 2px 6px 6px 2px; box-shadow: none; background-color: var(--paper);
+    background-image: repeating-linear-gradient(90deg, var(--edge) 0 1px, var(--paper) 1px 2px), repeating-linear-gradient(var(--edge) 0 1px, var(--paper) 1px 2px);
+    background-size: 5px 100%, 100% 7px; background-position: right top, left bottom; background-repeat: no-repeat;
+  }
   /* either cover lies over the one page, so the shut book takes the same place as the open one */
-  .overlay .book.closed::after, .overlay .book.closed.at-back::after, [data-cover] .main .book.closed::after { left: 0; right: -3px; }
+  .overlay .book.closed::after, .overlay .book.closed.at-back::after, [data-cover] .main .book.closed::after { left: 0; right: -5px; }
   .overlay .book.closed::before, .overlay .book.closed.at-back::before, [data-cover] .main .book.closed::before { left: -10px; right: -8px; }
+  /* Tablets have the room for a wider board and more of the block of pages; phones keep every pixel for the text. */
+  @media (min-width: 600px) and (min-height: 501px) {
+    .book::before { right: -12px; bottom: -12px; }
+    .book::after { right: -7px; bottom: -8px; background-size: 7px 100%, 100% 8px; }
+    .overlay .book.closed::after, .overlay .book.closed.at-back::after, [data-cover] .main .book.closed::after { right: -7px; }
+    .overlay .book.closed::before, .overlay .book.closed.at-back::before, [data-cover] .main .book.closed::before { right: -12px; }
+  }
   [data-cover] .main .book.closed { transform: none; }
   .cover-layer, .cover-layer.back { left: 0; width: 100%; }
+  .main .cover-layer.front::after { top: -8px; bottom: -10px; }
   .page.cover.back-cover { border-radius: 2px 8px 8px 2px; box-shadow: inset 18px 0 22px -20px rgba(0, 0, 0, 0.5); }
   /* the spread's two pages lie on top of each other; only the current one shows */
   .pages { grid-template-columns: 1fr; }
   .slot { grid-area: 1 / 1; }
   .book[data-side='left'] .slot:nth-child(2), .book[data-side='right'] .slot:nth-child(1) { visibility: hidden; }
-  .spine { left: -10px; top: -8px; bottom: -10px; width: 12px; background: linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0)); }
-  .page.left, .page.right { border-radius: 2px 8px 8px 2px; box-shadow: inset 18px 0 22px -20px rgba(0, 0, 0, 0.3); }
+  .spine { left: -10px; top: -8px; bottom: -10px; width: 16px; background: linear-gradient(90deg, rgba(0,0,0,0.38), rgba(0,0,0,0.1) 70%, rgba(0,0,0,0)); }
+  /* the page curving down into the binding: a tight crease (a shadow), and a broad, soft fall-off drawn as a gradient
+     under the grain and grid, which costs far less to repaint during a turn than a wide blurred shadow */
+  .page.left, .page.right { border-radius: 2px 8px 8px 2px; box-shadow: inset 12px 0 14px -10px rgba(0, 0, 0, 0.32); }
+  .page.left:not(.cover), .page.right:not(.cover) {
+    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.035) 5%, rgba(0, 0, 0, 0) 11%), var(--grain),
+      linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 100% 100%, 180px 180px, 1.6em 1.6em, 1.6em 1.6em; background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+  }
   /* one page at a time: the footer is only the page number out of the book's pages, from the text column */
   .page.left .page-foot, .page.right .page-foot { justify-content: flex-start; padding-left: var(--ml); }
   .page-foot .foot-label, .page-foot .pno { display: none; }
@@ -638,41 +653,48 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .page-head, .page-foot, .page.right .page-foot, .page-body { padding-right: 6%; }
   .corner { bottom: -4px; }
   .corner.next { right: -4px; }
-  .corner.prev { left: auto; right: 62px; }
-  .corner.prev .ear { background: transparent; box-shadow: none; }
+  .corner.prev { left: -4px; }
+  /* dog-ears: only the folded-over triangle shows, its shadow following the fold rather than the button's square */
+  .corner .ear, .corner.prev .ear { box-shadow: none; }
+  .corner .ear { background: linear-gradient(135deg, transparent 50%, var(--paper-2) 50%, var(--edge)); filter: drop-shadow(-1px -1px 1.5px rgba(0, 0, 0, 0.22)); }
+  .corner.prev .ear { background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%, var(--edge)); filter: drop-shadow(1px -1px 1.5px rgba(0, 0, 0, 0.22)); }
   .close { top: -10px; right: -8px; }
-  .bt { display: none; }
   .page h1 { font-size: 2.55em; }
   .stat .big { font-size: 2.7em; }
 }
 
-/* ---------- phones, upright or sideways: one page from the desktop spread ---------- */
+/* ---------- one page at a time: phones, tablets, and screens too narrow or tall for a spread ---------- */
 /* The cover's edge and the spine's shadow on the left, the running head and theme toggle on one row at the top,
-   the chapter and page number between the dog-ears at the bottom, the contents behind a bookmark ribbon. */
-@media (max-width: 599px), (orientation: landscape) and (max-height: 500px) {
-  /* a thin desk edge, then about 8px of cover */
+   the page number between the dog-ears at the bottom, the contents behind a bookmark ribbon. */
+@media (max-width: 899px), (max-aspect-ratio: 11/10), (max-height: 500px) {
+  /* a thin desk edge, then the board's overhang; tablets show more desk and a wider board round the pages */
   .book-wrap, .overlay .book-wrap {
-    --gap: 6px; gap: 0;
-    padding: calc(max(var(--gap), env(safe-area-inset-top, 0px)) + 8px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + 8px)
-      calc(max(var(--gap), env(safe-area-inset-bottom, 0px)) + 10px) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 10px);
+    --gap: 6px; --or: 8px; --ob: 10px; gap: 0;
+    padding: calc(max(var(--gap), env(safe-area-inset-top, 0px)) + 8px) calc(max(var(--gap), env(safe-area-inset-right, 0px)) + var(--or))
+      calc(max(var(--gap), env(safe-area-inset-bottom, 0px)) + var(--ob)) calc(max(var(--gap), env(safe-area-inset-left, 0px)) + 10px);
+  }
+  @media (min-width: 600px) and (min-height: 501px) {
+    .book-wrap, .overlay .book-wrap { --gap: 12px; --or: 12px; --ob: 12px; }
   }
   /* the small viewport height, so the book (and every em in it) holds still as the address bar shows or hides */
   .desk { height: 100vh; height: 100svh; }
   .overlay .book-wrap { width: 100vw; height: 100vh; height: 100svh; }
-  .book-bar { display: none; }
-  /* sideways: the same single page, centred */
-  @media (orientation: landscape) {
+  /* a phone held sideways: the same single page, centred */
+  @media (orientation: landscape) and (max-height: 500px) {
     .book-wrap, .overlay .book-wrap { width: 100%; max-width: 560px; margin: 0 auto; }
   }
 
+  /* the text column grows with the page: 48px of margin on phones, more on tablets */
   .page { font-size: clamp(15px, min(2.05cqh, 4.2cqi), 18px); }
-  .page, .page.with-margin { --ml: 48px; --rule-x: 36px; }
-  .page-body { padding: 0.2em 16px 0.6em var(--ml); }
+  .page, .page.with-margin { --ml: max(48px, 8cqi); --rule-x: max(36px, 6cqi); }
+  .page-body { padding: 0.2em max(16px, 4cqi) 0.6em var(--ml); }
 
   /* top row: the running head on one line, the theme toggle at its right end */
   .book-theme { display: block; top: 4px; right: 8px; }
   .page-head, .page.with-theme .page-head {
-    min-height: 52px; align-items: center; padding: 4px 60px 0 var(--ml); font-size: 14px; letter-spacing: 0.04em;
+    min-height: 52px; align-items: center; padding: 4px 60px 0 var(--ml); font-size: 14px; letter-spacing: 0.01em;
+    /* set as printed, not as a toolbar: no capitals */
+    text-transform: none;
   }
   .page-head > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* an entry book's close button joins the row, and the toggle steps left of it */
@@ -682,8 +704,6 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 
   /* footer row: the page number, centred between the dog-ears */
   .page-foot, .page.left .page-foot, .page.right .page-foot { min-height: 64px; align-items: center; justify-content: center; padding: 0 60px; font-size: 14px; letter-spacing: 0.02em; }
-  .corner.prev { left: -4px; right: auto; }
-  .corner.prev .ear { background: linear-gradient(225deg, transparent 50%, var(--paper-2) 50%); box-shadow: 2px -2px 6px -3px rgba(0,0,0,0.25); }
 
   /* the bookmark ribbon, hanging in the margin left of the red rule */
   .ribbon {
@@ -706,8 +726,8 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .toc-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); opacity: 0; transition: opacity 0.25s ease; }
   .toc-sheet {
     position: absolute; top: 0; bottom: 0; left: 0; width: min(78%, 300px); border-radius: 2px 8px 8px 2px;
-    background-color: var(--paper); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 1.6em 1.6em; color: var(--ink); box-shadow: 12px 0 30px -12px rgba(0, 0, 0, 0.45);
+    background-color: var(--paper); background-image: var(--grain), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 180px 180px, 1.6em 1.6em, 1.6em 1.6em; color: var(--ink); box-shadow: 12px 0 30px -12px rgba(0, 0, 0, 0.45);
     transform: translateX(-104%); transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .toc-panel.open .toc-scrim { opacity: 1; }
@@ -730,6 +750,12 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .statpage > .fig { max-height: none; }
   .gainmini li { grid-template-columns: minmax(0, 1fr) auto; gap: 0.2em 0.6em; }
   .gainmini li > :first-child { grid-column: 1 / -1; }
+  /* Tablets: the page's own type size (as in a spread), and a result figure's rows on one line, as there is room. */
+  @media (min-width: 600px) and (min-height: 501px) {
+    .page { font-size: clamp(14px, min(2.05cqh, 3.1cqi), 20px); }
+    .gainmini li { grid-template-columns: 9.6em minmax(0, 1fr) auto; gap: 0.6em; }
+    .gainmini li > :first-child { grid-column: auto; }
+  }
 
   /* The console fits the page's width and keeps one fixed height: never the space left on the page, never its
      number of lines. Its screen scrolls on its own; a page too short for it scrolls inside itself. */

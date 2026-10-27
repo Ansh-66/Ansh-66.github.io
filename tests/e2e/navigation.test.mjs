@@ -128,15 +128,19 @@ test('the phone contents ribbon opens, turns to a chapter, closes on Escape and 
   await done(page);
 });
 
-test('the tablet chapter picker turns to a chapter and closes an entry', async () => {
+test('a tablet reads one page at a time like a phone: the contents ribbon turns to a chapter and closes an entry', async () => {
   const page = await open(browser, '/#intro', { ...still, viewport: { width: 820, height: 1180 } });
   await settle(page, 300);
-  await page.locator('main .book-bar select').selectOption({ label: 'Contact' });
+  // no bar of buttons under the book: the ribbon, the corners and swipes are the way round
+  assert.equal(await page.locator('.book-bar').count(), 0);
+  await page.locator('main .book .ribbon').click();
+  await page.locator('main .toc-panel.open nav a', { hasText: 'Contact' }).click();
   await settle(page);
   assert.equal((await state(page)).hash, '#contact');
   await page.goto(BASE + '/work/graph-rag/');
   await settle(page, 500);
-  await page.locator('.overlay .book-bar select').selectOption({ label: '← Back to the notebook' });
+  await page.locator('.overlay .book .ribbon').click();
+  await page.locator('.overlay .toc-panel.open .mback').click();
   await page.waitForTimeout(500);
   const s = await state(page);
   assert.equal(s.overlay, false);
@@ -241,7 +245,7 @@ test('abuse: mashed keys and clicks, theme switches and resizes mid-turn leave a
     await settle(page, 300);
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(150);
-    await page.evaluate(() => document.querySelector('.book-theme button, .book-bar .iconbtn')?.click());
+    await page.evaluate(() => document.querySelector('.book-theme button')?.click());
     await page.setViewportSize(vp.width > 900 ? { width: 390, height: 844 } : { width: 1440, height: 900 });
     await page.waitForTimeout(150);
     await page.setViewportSize(vp);
