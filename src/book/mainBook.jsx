@@ -184,8 +184,6 @@ export const mainPages = [
         <h2>AI Engineer, Tata Consultancy Services</h2>
         <p className="muted small">
           AI &amp; Service Transformations · Rapid Build Team · Pune · <span className="num">Jan 2025 – present</span>
-          <br />
-          Designation: Assistant Systems Engineer
         </p>
         <ul>
           <li>On the Rapid Build Team, taking enterprise client use cases to working solutions on short timelines.</li>
@@ -226,11 +224,14 @@ export const mainPages = [
           <dt>Languages</dt>
           <dd>Python, JavaScript, SQL, HTML, CSS</dd>
           <dt>AI / ML</dt>
-          <dd>RAG and Graph RAG, LLM evaluation, MCP, tool calling, agentic workflows, prompt engineering; Gemini, OpenAI, Groq and Sarvam APIs</dd>
-          <dt>Frameworks</dt>
-          <dd>FastAPI, SQLAlchemy, LangChain, Pydantic, NumPy, sentence-transformers, React</dd>
+          <dd>
+            RAG and Graph RAG (embeddings, reranking, relation extraction, entity resolution, graph traversal), LLM evaluation, LLM APIs (Gemini, OpenAI,
+            Groq, Sarvam), MCP, tool calling, prompt engineering, agentic workflows
+          </dd>
+          <dt>Frameworks &amp; Libraries</dt>
+          <dd>FastAPI, SQLAlchemy, LangChain, Pydantic, NumPy, scikit-learn, sentence-transformers, React</dd>
           <dt>Tools</dt>
-          <dd>Git, SQLite, Ollama</dd>
+          <dd>Git &amp; GitHub, SQLite, DuckDB, Ollama</dd>
         </dl>
       </div>
     ),
