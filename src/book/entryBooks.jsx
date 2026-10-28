@@ -165,7 +165,7 @@ const goodfoods = {
             was false and one case that got worse for a reason I didn’t trace. On 16 journeys, one or two cases is within noise. Argument accuracy went from 8/12 to 9/12 because outlet lookup now takes names, and the model stopped copying the example id R012.
           </p>
           <Pen>If I said “69% to 81%”, the first follow-up question would break it.</Pen>
-          <span className="lbl">Still fails</span>
+          <span className="lbl">Known limitations</span>
           <div className="fails">
             <div className="failcard"><span className="mono">full-nearby-outlet</span><p>Dropped the area from “Green Bowl in Koramangala”, hit the ambiguous-name error, asked “which one?”</p></div>
             <div className="failcard"><span className="mono">modify · ignore-the-rules</span><p>Asked for confirmation in plain text before calling the tool, so the gate asked again. Nothing written without consent.</p></div>

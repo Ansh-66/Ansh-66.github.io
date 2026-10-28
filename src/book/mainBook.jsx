@@ -252,8 +252,10 @@ export const mainPages = [
         />
         <span className="lbl">Flow</span>
         <Flow steps={['Guest', 'Agent loop', 'Gate', 'MCP server · 8 tools', 'SQLite']} keyStep={2} />
-        <span className="lbl">Still fails</span>
-        <Pen>Drops the area from “Green Bowl in Koramangala” and asks “which one?” instead of saying it’s full. And the prompt and the gate both ask for confirmation.</Pen>
+        <span className="lbl">Scope</span>
+        <p className="muted">16 scripted journeys on one model (gpt-oss-20b), one run each; 13 pass.</p>
+        <span className="lbl">Next</span>
+        <p className="muted">Let the code gate own confirmation alone, so the guest is asked once.</p>
       </div>
     ),
   },
@@ -300,8 +302,8 @@ export const mainPages = [
         />
         <span className="lbl">Flow</span>
         <Flow steps={['115 articles', 'Extract', 'Resolve · 222 → 136', 'Graph · 166 edges', '2-hop walk', 'Cited answer']} keyStep={4} />
-        <span className="lbl">Still fails</span>
-        <Pen>Facts from the 5 articles that failed extraction are missing from the graph. And 11 questions, one run each, is a direction, not a proof.</Pen>
+        <span className="lbl">Scope</span>
+        <p className="muted">11 questions, one run each, over 110 of 115 articles (5 didn’t extract). A direction, not a proof.</p>
       </div>
     ),
   },
@@ -351,8 +353,8 @@ export const mainPages = [
         />
         <span className="lbl">Flow</span>
         <Flow steps={['Chunk', 'Embed', 'Cosine top 5', 'LLM rerank', 'hit@k']} keyStep={3} />
-        <span className="lbl">Still fails</span>
-        <Pen>17 questions over 6 chunks is a method check, not a benchmark, and paraphrased evidence counts as a miss.</Pen>
+        <span className="lbl">Scope</span>
+        <p className="muted">17 questions over 6 chunks: a method check, not a benchmark.</p>
       </div>
     ),
   },
