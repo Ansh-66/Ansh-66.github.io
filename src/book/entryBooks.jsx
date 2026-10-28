@@ -338,7 +338,7 @@ const graph = {
           <Pen>Start with Q01. Vector never retrieved the Airtel Africa passage.</Pen>
           <p>
             Without retrieval the model was confidently wrong: a 49% stake that was really 75%, the wrong seller, and a takeover of Star Health that{' '}
-            <Mark kind="strike">never happened</Mark>. Both retrieval methods refused that one.
+            <Mark kind="under">never happened</Mark>. Both retrieval methods refused that one.
           </p>
         </div>
       ),
