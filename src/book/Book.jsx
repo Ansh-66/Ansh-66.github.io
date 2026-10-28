@@ -321,25 +321,40 @@ export default function Book({ pages, chapters, spread, onSpread, cover, backCov
   }, [active, next, prev, onClose, shut, openCover, tocOpen, closeToc]);
 
   // A page whose words don't fit scrolls inside itself, and a wide table scrolls sideways; while one does, it takes
-  // focus so the keyboard can scroll it (on a page, left and right still turn pages). Checked whenever a scroller or
-  // its contents change size.
+  // focus so the keyboard can scroll it (on a page, left and right still turn pages). A page with more below its
+  // fold is marked data-more, which shows the soft shadow at its foot. Checked whenever a scroller or its contents
+  // change size, and as a page scrolls.
   useEffect(() => {
     const book = bookEl.current;
     if (!book || typeof ResizeObserver === 'undefined') return;
     const scrollers = () => book.querySelectorAll('.pages .page-body, .pages .tablebox, .pages pre.code');
+    const below = (b) => {
+      if (b.scrollTop + b.clientHeight < b.scrollHeight - 1) b.setAttribute('data-more', '');
+      else b.removeAttribute('data-more');
+    };
     const check = () =>
       scrollers().forEach((b) => {
-        const over = b.matches('.page-body') ? b.scrollHeight > b.clientHeight + 1 : b.scrollWidth > b.clientWidth + 1;
+        const page = b.matches('.page-body');
+        const over = page ? b.scrollHeight > b.clientHeight + 1 : b.scrollWidth > b.clientWidth + 1;
         if (over) b.setAttribute('tabindex', '0');
         else b.removeAttribute('tabindex');
+        if (page) below(b);
       });
+    // scroll events don't bubble, so one listener on the book catches every page as it scrolls
+    const onScroll = (e) => {
+      if (e.target instanceof Element && e.target.matches('.pages .page-body')) below(e.target);
+    };
     const ro = new ResizeObserver(check);
     scrollers().forEach((b) => {
       ro.observe(b);
       if (b.firstElementChild) ro.observe(b.firstElementChild);
     });
+    book.addEventListener('scroll', onScroll, { capture: true, passive: true });
     check();
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      book.removeEventListener('scroll', onScroll, { capture: true });
+    };
   }, [spread, side, flip, shut]);
 
   // The contents panel takes focus as it opens; the panel focuses its first link.

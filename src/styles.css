@@ -159,9 +159,15 @@ main.behind { pointer-events: none; }
 .page-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 7% 2% var(--ml); scrollbar-width: thin; scrollbar-color: var(--rule) transparent; overscroll-behavior: contain;
   /* a scroller starts its own touch-action in Chrome: keep sideways swipes for the book's page turns */
   touch-action: pan-y;
-  /* a soft shadow at the bottom only while there is more to scroll */
-  background: linear-gradient(rgba(0,0,0,0), var(--paper) 70%) 0 100% / 100% 2.2em no-repeat local,
-    radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,0.2), rgba(0,0,0,0)) 0 100% / 100% 0.9em no-repeat scroll; }
+}
+/* A soft shadow at the foot of a page only while there is more to scroll (Book.jsx marks it data-more). It sits over
+   the paper rather than painting over it, so the grid and grain run unbroken to the foot of every page. */
+.page-body::after {
+  /* pinned to the scroller's bottom edge: below the page's bottom padding (2% of the page's width, here 2cqi) */
+  content: ''; display: block; position: sticky; bottom: -2cqi; height: 0.9em; margin-top: -0.9em; pointer-events: none;
+  background: radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0)); opacity: 0; transition: opacity 0.2s ease;
+}
+.page-body[data-more]::after { opacity: 1; }
 /* a readable line length on very wide pages */
 .page-body > * { max-width: 40em; }
 .page h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.8em; line-height: 0.98; letter-spacing: -0.01em; margin: 0.25em 0 0.35em; }
@@ -695,6 +701,7 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .page { font-size: clamp(15px, min(2.05cqh, 4.2cqi), 18px); }
   .page, .page.with-margin { --ml: max(48px, 8cqi); --rule-x: max(36px, 6cqi); }
   .page-body { padding: 0.2em max(16px, 4cqi) 0.6em var(--ml); }
+  .page-body::after { bottom: -0.6em; }
 
   /* top row: the running head on one line, the theme toggle at its right end */
   .book-theme { display: block; top: 4px; right: 8px; }
