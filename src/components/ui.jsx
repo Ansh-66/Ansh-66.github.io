@@ -11,6 +11,7 @@ export const LINKS = {
   github: 'https://github.com/Ansh-66',
   resume: '/Ansh_Kumar_Singh_Resume.pdf',
   demo: 'https://drive.google.com/file/d/19X58cKDnBxULvZTbs0d39nogYVOV5TLf/view?usp=sharing',
+  goodfoods: 'https://github.com/Ansh-66/goodfoods-agent',
   graphRepo: 'https://github.com/Ansh-66/Insurance-Graph-RAG',
   ragRepo: 'https://github.com/Ansh-66/rag-from-scratch',
   agentsRepo: 'https://github.com/Ansh-66/single-vs-multi-agent',

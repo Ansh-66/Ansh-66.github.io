@@ -194,7 +194,7 @@ const goodfoods = {
           <p>About 4 minutes, hosted on Google Drive.</p>
           <Ext href={LINKS.demo} className="btn solid">Open the demo video</Ext>
           <Pen>The voiceover is Sarvam’s text-to-speech, disclosed in the video.</Pen>
-          <p className="muted small">Repo: coming soon.</p>
+          <Ext href={LINKS.goodfoods} className="btn">Code on GitHub</Ext>
           <End slug="reservation-agent" next="/work/graph-rag/" nextTitle="Graph RAG" />
         </div>
       ),

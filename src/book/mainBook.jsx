@@ -188,13 +188,18 @@ export const mainPages = [
           Designation: Assistant Systems Engineer
         </p>
         <ul>
-          <li>On the Rapid Build Team, taking enterprise use cases from proof of concept to delivery on short timelines.</li>
+          <li>On the Rapid Build Team, taking enterprise client use cases to working solutions on short timelines.</li>
           <li>
-            Built three document-AI proofs of concept end to end as the sole engineer (Python, FastAPI, LangChain, Gemini, React):
+            Designed and built four AI systems end to end as the sole engineer (Python, FastAPI, LangChain, Gemini, DuckDB, React):
             <ul className="sub">
               <li>
                 <b>Loan and policy onboarding:</b> Gemini extraction into Pydantic schemas and rule validation, a junior → senior approval flow, decisions
                 emailed through the Gmail API.
+              </li>
+              <li>
+                <b>Grounded GenAI analytics platform:</b> ingestion with rule-based validation and quarantine into layered DuckDB storage with lineage;
+                Gemini turns questions into a query spec checked against a semantic layer, and every figure in AI narratives is verified against
+                SQL-computed facts. An explainable price-anomaly service (robust z-scores, Isolation Forest) routes flagged survey entries to human review.
               </li>
               <li>
                 <b>Licence application validator:</b> cross-checks a licence, passport and address proof against rule sets in a background job, producing a
@@ -273,6 +278,7 @@ export const mainPages = [
         <div className="runrow">
           <RunEntry to="/work/reservation-agent/" />
           <Ext href={LINKS.demo}>Demo video</Ext>
+          <Ext href={LINKS.goodfoods}>GitHub</Ext>
         </div>
       </div>
     ),
