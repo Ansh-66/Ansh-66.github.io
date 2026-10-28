@@ -511,6 +511,13 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
 .type-table td.win { color: var(--pen); font-weight: 600; }
 
 .qx-tabs { display: flex; gap: 0.3em; overflow-x: auto; padding-bottom: 0.5em; scrollbar-width: thin; }
+/* the tabs between two arrows that step through them; a phone or tablet swipes them instead */
+.qx-nav { display: flex; align-items: stretch; gap: 0.3em; margin-bottom: 0.5em; }
+.qx-nav .qx-tabs { flex: 1 1 auto; min-width: 0; padding-bottom: 0; scrollbar-width: none; }
+.qx-nav .qx-tabs::-webkit-scrollbar { display: none; }
+.qx-arrow { flex: none; min-width: max(2em, 40px); font: inherit; font-size: 1.1em; line-height: 1; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 5px; cursor: pointer; }
+.qx-arrow:hover:not(:disabled) { border-color: var(--ink-2); color: var(--pen); }
+.qx-arrow:disabled { opacity: 0.35; cursor: default; }
 .qx-tab { flex: none; font-family: var(--f-mono); font-size: 0.7em; border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 5px; padding: 0.35em 0.55em; min-height: 40px; cursor: pointer; text-align: left; }
 .qx-tab[aria-selected='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .qx-tab small { display: block; font-size: 0.82em; opacity: 0.75; text-transform: uppercase; }
@@ -764,8 +771,8 @@ blockquote.quote { margin: 0.5em 0 0.8em; padding: 0.5em 0.9em; border-left: 3px
   .stack > .console { flex: none; }
   .stack > .console .screen { flex: none; height: 22em; min-height: 0; max-height: none; }
   .requests { flex: none; height: calc(36px + 0.6em); }
-  /* a phone swipes the request chips sideways: no arrows */
-  .req-arrow { display: none; }
+  /* a phone or tablet swipes the request chips and the question tabs sideways: no arrows */
+  .req-arrow, .qx-arrow { display: none; }
   .page-body > .stack:has(> .console) { justify-content: center; }
 
   /* the short pages (intro, skills, certifications) get room to breathe instead of bunching at the top */

@@ -402,6 +402,50 @@ test('fast key presses never leave a page stuck mid-turn', async () => {
   }
 });
 
+test('the Graph RAG question arrows reach every question a whole tab at a time; phones swipe instead', async () => {
+  const toExplorer = async (page) => {
+    for (let i = 0; i < 12 && !(await page.locator('.overlay .qx-tabs:visible').count()); i++) {
+      await page.keyboard.press('ArrowRight');
+      await settle(page, 300);
+    }
+    return page.locator('.overlay .qx-nav:visible').first();
+  };
+  const page = await open(browser, '/work/graph-rag/', still);
+  await settle(page, 500);
+  const nav = await toExplorer(page);
+  const [back, more] = [nav.locator('.qx-arrow').nth(0), nav.locator('.qx-arrow').nth(1)];
+  assert.equal(await back.isDisabled(), true, 'nothing before the first question');
+  assert.equal(await more.isDisabled(), false, 'more questions to the right');
+  const n = await nav.locator('.qx-tab').count();
+  const fully = () => nav.evaluate((el) => {
+    const r = el.querySelector('.qx-tabs').getBoundingClientRect();
+    return [...el.querySelectorAll('.qx-tab')].map((q, i) => [i, q.getBoundingClientRect()]).filter(([, b]) => b.left >= r.left - 1 && b.right <= r.right + 1).map(([i]) => i);
+  });
+  const seen = new Set();
+  for (let i = 0; i < 20 && !(await more.isDisabled()); i++) {
+    (await fully()).forEach((k) => seen.add(k));
+    await more.click();
+    await page.waitForTimeout(100);
+  }
+  (await fully()).forEach((k) => seen.add(k));
+  assert.deepEqual([...seen].sort((a, b) => a - b), [...Array(n).keys()], 'every question seen whole');
+  await nav.locator('.qx-tab').nth(n - 1).click();
+  assert.equal(await nav.locator('.qx-tab').nth(n - 1).getAttribute('aria-selected'), 'true');
+  for (let i = 0; i < 20 && !(await back.isDisabled()); i++) {
+    await back.click();
+    await page.waitForTimeout(100);
+  }
+  assert.ok((await fully()).includes(0), 'back to the first question');
+  assert.deepEqual(page.problems(), []);
+  await done(page);
+
+  const phone = await open(browser, '/work/graph-rag/', { ...still, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await settle(phone, 500);
+  const pnav = await toExplorer(phone);
+  assert.equal(await pnav.locator('.qx-arrow:visible').count(), 0, 'no arrows on a phone');
+  await done(phone);
+});
+
 test('the trace console arrows reach every request a whole chip at a time; phones swipe instead', async () => {
   const page = await open(browser, '/#intro', still);
   await settle(page, 300);
